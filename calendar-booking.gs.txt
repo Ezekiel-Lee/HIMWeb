@@ -1,0 +1,306 @@
+/**
+ * JD Media Mission — 게시판 + 캘린더 예약 + 관리자 승인 백엔드
+ * ════════════════════════════════════════════════════════
+ *
+ * 설치: CALENDAR_SETUP_GUIDE.md 참고
+ *
+ * 이 파일 하나에 다음 기능이 모두 들어있습니다:
+ *  - 게시판 글쓰기 / 목록 조회 (승인 대기 → 운영자 승인)
+ *  - 교육 신청 (캘린더에 즉시 등록, pending 상태 → 운영자 승인)
+ *  - 관리자 인증, 대기 목록 조회, 수락/거절 처리
+ */
+
+/* 캘린더 설정 페이지에서 복사한 캘린더 ID로 교체해 주세요 */
+const CALENDAR_ID = 'YOUR_CALENDAR_ID@group.calendar.google.com';
+
+/* board.html / admin.html의 ADMIN_PASSWORD와 반드시 동일한 값으로 설정해 주세요 */
+const ADMIN_PASSWORD = 'Genesis11';
+
+const SHEET_NAME = '게시글';
+
+/* ═══════════════════════════════════════════════════
+   라우팅
+   ═══════════════════════════════════════════════════ */
+function doPost(e) {
+  try {
+    const body = JSON.parse(e.postData.contents);
+
+    if (body.action === 'bookSlot')        return handleBookSlot(body);
+    if (body.action === 'approvePost')     return handleApprovePost(body);
+    if (body.action === 'rejectPost')      return handleRejectPost(body);
+    if (body.action === 'approveBooking')  return handleApproveBooking(body);
+    if (body.action === 'rejectBooking')   return handleRejectBooking(body);
+
+    /* action 없음 = 일반 게시글 작성 */
+    return handleBoardPost(body);
+
+  } catch (err) {
+    return jsonOut({ ok: false, error: err.message });
+  }
+}
+
+function doGet(e) {
+  const action = e.parameter.action;
+
+  if (action === 'checkAvailability') return handleCheckAvailability(e.parameter.date);
+  if (action === 'listEvents')        return handleListEvents();
+  if (action === 'adminPending')      return handleAdminPending(e.parameter.password);
+
+  /* action 없음 = 승인된 게시글 목록 (공개) */
+  return handleListPosts();
+}
+
+function jsonOut(obj) {
+  return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
+}
+
+function checkAdmin(password) {
+  return password === ADMIN_PASSWORD && ADMIN_PASSWORD !== 'CHANGE_THIS_PASSWORD';
+}
+
+/* ═══════════════════════════════════════════════════
+   게시판 — 글쓰기 / 목록 조회
+   ═══════════════════════════════════════════════════ */
+function handleListPosts() {
+  const sheet = getSheet();
+  const rows = sheet.getDataRange().getValues();
+  const headers = rows[0];
+  const data = [];
+
+  for (let i = 1; i < rows.length; i++) {
+    const row = rows[i];
+    const approved = row[headers.indexOf('approved')];
+    if (approved !== true && approved !== 'TRUE') continue;
+
+    const item = {};
+    headers.forEach(function(h, idx) { item[h] = row[idx]; });
+    data.push(item);
+  }
+  data.reverse();
+
+  return jsonOut({ ok: true, posts: data });
+}
+
+function handleBoardPost(body) {
+  const sheet = getSheet();
+  const id = Utilities.getUuid();
+  const timestamp = new Date().toISOString();
+
+  const isVerifiedAdmin = checkAdmin(body.adminPassword);
+  const isNotice = isVerifiedAdmin && body.isNotice === true;
+  const approved = isVerifiedAdmin; // 어드민 글은 자동 승인, 일반 글은 대기
+
+  sheet.appendRow([
+    id, timestamp,
+    body.name || '익명',
+    body.category || '일반',
+    body.title || '',
+    body.content || '',
+    body.youtubeUrl || '',
+    approved,
+    isNotice
+  ]);
+
+  return jsonOut({ ok: true, id: id, approved: approved });
+}
+
+function getSheet() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName(SHEET_NAME);
+  if (!sheet) {
+    sheet = ss.insertSheet(SHEET_NAME);
+    sheet.appendRow(['id', 'timestamp', 'name', 'category', 'title', 'content', 'youtubeUrl', 'approved', 'isNotice']);
+  }
+  return sheet;
+}
+
+function findRowById(sheet, id) {
+  const rows = sheet.getDataRange().getValues();
+  const headers = rows[0];
+  const idCol = headers.indexOf('id');
+  for (let i = 1; i < rows.length; i++) {
+    if (rows[i][idCol] === id) return { rowIndex: i + 1, headers: headers, row: rows[i] };
+  }
+  return null;
+}
+
+/* ═══════════════════════════════════════════════════
+   관리자 — 게시글 승인 / 거절
+   ═══════════════════════════════════════════════════ */
+function handleApprovePost(body) {
+  if (!checkAdmin(body.password)) return jsonOut({ ok: false, error: '비밀번호가 올바르지 않습니다.' });
+
+  const sheet = getSheet();
+  const found = findRowById(sheet, body.id);
+  if (!found) return jsonOut({ ok: false, error: '게시글을 찾을 수 없습니다.' });
+
+  const approvedCol = found.headers.indexOf('approved') + 1;
+  sheet.getRange(found.rowIndex, approvedCol).setValue(true);
+
+  return jsonOut({ ok: true });
+}
+
+function handleRejectPost(body) {
+  if (!checkAdmin(body.password)) return jsonOut({ ok: false, error: '비밀번호가 올바르지 않습니다.' });
+
+  const sheet = getSheet();
+  const found = findRowById(sheet, body.id);
+  if (!found) return jsonOut({ ok: false, error: '게시글을 찾을 수 없습니다.' });
+
+  sheet.deleteRow(found.rowIndex);
+
+  return jsonOut({ ok: true });
+}
+
+/* ═══════════════════════════════════════════════════
+   캘린더 — 예약 가능 여부 확인
+   ═══════════════════════════════════════════════════ */
+function handleCheckAvailability(dateStr) {
+  const cal = CalendarApp.getCalendarById(CALENDAR_ID);
+  const date = new Date(dateStr);
+  const startOfDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const endOfDay = new Date(startOfDay.getTime() + 24 * 60 * 60 * 1000);
+
+  const events = cal.getEvents(startOfDay, endOfDay);
+
+  return jsonOut({
+    ok: true,
+    available: events.length === 0,
+    existingEvents: events.map(function(ev) { return ev.getTitle(); })
+  });
+}
+
+/* ═══════════════════════════════════════════════════
+   캘린더 — 자동 예약 (즉시 등록, pending 상태)
+   ═══════════════════════════════════════════════════ */
+function handleBookSlot(body) {
+  const cal = CalendarApp.getCalendarById(CALENDAR_ID);
+  const date = new Date(body.date);
+  const startOfDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const endOfDay = new Date(startOfDay.getTime() + 24 * 60 * 60 * 1000);
+
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+
+  try {
+    const existing = cal.getEvents(startOfDay, endOfDay);
+    if (existing.length > 0) {
+      return jsonOut({ ok: false, reason: 'already_booked', message: '이미 마감된 날짜입니다.' });
+    }
+
+    const title = '[승인대기] ' + (body.name || '익명') + ' — ' + (body.programType || '창조과학 교실');
+    const description =
+      'STATUS:pending\n' +
+      '신청자: ' + (body.name || '') + '\n' +
+      '연락처: ' + (body.phone || '') + '\n' +
+      '이메일: ' + (body.email || '') + '\n' +
+      '프로그램: ' + (body.programType || '') + '\n' +
+      '메모: ' + (body.note || '');
+
+    const startTime = new Date(startOfDay.getTime() + 14 * 60 * 60 * 1000); // 오후 2시 기본
+    const endTime = new Date(startTime.getTime() + 2 * 60 * 60 * 1000);
+
+    cal.createEvent(title, startTime, endTime, { description: description });
+
+    return jsonOut({ ok: true, message: '신청이 접수되었습니다. 운영자 확인 후 확정됩니다.' });
+
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   캘린더 — 전체 이벤트 목록 (about.html 표시용)
+   ═══════════════════════════════════════════════════ */
+function handleListEvents() {
+  const cal = CalendarApp.getCalendarById(CALENDAR_ID);
+  const now = new Date();
+  const pastStart = new Date(now.getFullYear() - 2, 0, 1);
+  const futureEnd = new Date(now.getFullYear() + 1, 11, 31);
+
+  const events = cal.getEvents(pastStart, futureEnd);
+
+  const data = events.map(function(ev) {
+    return {
+      title: ev.getTitle(),
+      start: ev.getStartTime().toISOString(),
+      end: ev.getEndTime().toISOString(),
+      isPast: ev.getStartTime() < now
+    };
+  });
+
+  return jsonOut({ ok: true, events: data });
+}
+
+/* ═══════════════════════════════════════════════════
+   관리자 — 교육 신청 승인 / 거절
+   ═══════════════════════════════════════════════════ */
+function handleApproveBooking(body) {
+  if (!checkAdmin(body.password)) return jsonOut({ ok: false, error: '비밀번호가 올바르지 않습니다.' });
+
+  const cal = CalendarApp.getCalendarById(CALENDAR_ID);
+  const event = cal.getEventById(body.eventId);
+  if (!event) return jsonOut({ ok: false, error: '이벤트를 찾을 수 없습니다.' });
+
+  const newTitle = event.getTitle().replace('[승인대기]', '[확정]');
+  event.setTitle(newTitle);
+
+  const desc = event.getDescription().replace('STATUS:pending', 'STATUS:confirmed');
+  event.setDescription(desc);
+
+  return jsonOut({ ok: true });
+}
+
+function handleRejectBooking(body) {
+  if (!checkAdmin(body.password)) return jsonOut({ ok: false, error: '비밀번호가 올바르지 않습니다.' });
+
+  const cal = CalendarApp.getCalendarById(CALENDAR_ID);
+  const event = cal.getEventById(body.eventId);
+  if (!event) return jsonOut({ ok: false, error: '이벤트를 찾을 수 없습니다.' });
+
+  event.deleteEvent(); // 캘린더에서 삭제 → 해당 날짜 다시 신청 가능해짐
+
+  return jsonOut({ ok: true });
+}
+
+/* ═══════════════════════════════════════════════════
+   관리자 — 대기 중인 게시글 + 교육 신청 한 번에 조회
+   ═══════════════════════════════════════════════════ */
+function handleAdminPending(password) {
+  if (!checkAdmin(password)) return jsonOut({ ok: false, error: '비밀번호가 올바르지 않습니다.' });
+
+  /* 대기 중인 게시글 (approved !== true) */
+  const sheet = getSheet();
+  const rows = sheet.getDataRange().getValues();
+  const headers = rows[0];
+  const pendingPosts = [];
+
+  for (let i = 1; i < rows.length; i++) {
+    const row = rows[i];
+    const approved = row[headers.indexOf('approved')];
+    if (approved === true || approved === 'TRUE') continue;
+
+    const item = {};
+    headers.forEach(function(h, idx) { item[h] = row[idx]; });
+    pendingPosts.push(item);
+  }
+
+  /* 대기 중인 교육 신청 (제목에 [승인대기] 포함된 캘린더 이벤트) */
+  const cal = CalendarApp.getCalendarById(CALENDAR_ID);
+  const now = new Date();
+  const futureEnd = new Date(now.getFullYear() + 1, 11, 31);
+  const events = cal.getEvents(now, futureEnd);
+
+  const pendingBookings = events
+    .filter(function(ev) { return ev.getTitle().indexOf('[승인대기]') === 0; })
+    .map(function(ev) {
+      return {
+        eventId: ev.getId(),
+        title: ev.getTitle(),
+        description: ev.getDescription(),
+        date: ev.getStartTime().toISOString()
+      };
+    });
+
+  return jsonOut({ ok: true, pendingPosts: pendingPosts, pendingBookings: pendingBookings });
+}
