@@ -347,14 +347,14 @@ function switchTab(btn, id, groupSel){
 </script>
 <script>
 /* board.html / calendar-booking.gs.txt의 ADMIN_PASSWORD와 반드시 동일한 값으로 설정해 주세요 */
-var ADMIN_PASSWORD = 'CHANGE_THIS_PASSWORD';
+var ADMIN_PASSWORD = 'Genesis11';
 
 /* Apps Script 웹 앱 URL — board.html, support.html, media.html과 동일한 URL */
-var SCRIPT_URL = 'YOUR_APPS_SCRIPT_WEB_APP_URL_HERE';
+var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwtQ1636H4OAoYyNxq0tjTK2qMGQ1dOHTqfDVFz-45ZoUa9FBQ4McADqTjQWgwRoQYv/exec';
 
 function doLogin(){
   var pw = document.getElementById('gate-password').value;
-  if (pw === ADMIN_PASSWORD && ADMIN_PASSWORD !== 'CHANGE_THIS_PASSWORD'){
+  if (pw === ADMIN_PASSWORD && ADMIN_PASSWORD !== 'Genesis11'){
     sessionStorage.setItem('jd_admin_pw', pw);
     showDashboard();
   } else {
@@ -548,7 +548,7 @@ function updateCountsAfterRemoval(countId){
 
 /* 세션이 남아있으면 자동 로그인 상태 유지 */
 (function(){
-  if (getAdminPw() === ADMIN_PASSWORD && ADMIN_PASSWORD !== 'CHANGE_THIS_PASSWORD'){
+  if (getAdminPw() === ADMIN_PASSWORD && ADMIN_PASSWORD !== 'Genesis11'){
     showDashboard();
   }
 })();

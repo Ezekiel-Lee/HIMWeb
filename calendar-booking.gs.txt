@@ -1,5 +1,5 @@
 /**
- * JD Media Mission — 게시판 + 캘린더 예약 + 관리자 승인 백엔드
+ * HisCreation iDefend Mission (HiM) — 게시판 + 캘린더 예약 + 관리자 승인 백엔드
  * ════════════════════════════════════════════════════════
  *
  * 설치: CALENDAR_SETUP_GUIDE.md 참고
@@ -11,7 +11,7 @@
  */
 
 /* 캘린더 설정 페이지에서 복사한 캘린더 ID로 교체해 주세요 */
-const CALENDAR_ID = 'YOUR_CALENDAR_ID@group.calendar.google.com';
+const CALENDAR_ID = 'hiscreationidefendmission@gmail.com';
 
 /* board.html / admin.html의 ADMIN_PASSWORD와 반드시 동일한 값으로 설정해 주세요 */
 const ADMIN_PASSWORD = 'Genesis11';
@@ -55,7 +55,7 @@ function jsonOut(obj) {
 }
 
 function checkAdmin(password) {
-  return password === ADMIN_PASSWORD && ADMIN_PASSWORD !== 'CHANGE_THIS_PASSWORD';
+  return password === ADMIN_PASSWORD && ADMIN_PASSWORD !== 'Genesis11';
 }
 
 /* ═══════════════════════════════════════════════════
