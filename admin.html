@@ -354,7 +354,7 @@ var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwtQ1636H4OAoYyNxq0tjT
 
 function doLogin(){
   var pw = document.getElementById('gate-password').value;
-  if (pw === ADMIN_PASSWORD && ADMIN_PASSWORD !== 'Genesis11'){
+  if (pw === ADMIN_PASSWORD){
     sessionStorage.setItem('jd_admin_pw', pw);
     showDashboard();
   } else {
@@ -548,7 +548,7 @@ function updateCountsAfterRemoval(countId){
 
 /* 세션이 남아있으면 자동 로그인 상태 유지 */
 (function(){
-  if (getAdminPw() === ADMIN_PASSWORD && ADMIN_PASSWORD !== 'Genesis11'){
+  if (getAdminPw() === ADMIN_PASSWORD){
     showDashboard();
   }
 })();
