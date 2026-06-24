@@ -312,8 +312,12 @@ footer{background:#0D1A27;padding:48px 40px}
       <div class="booking-form-box">
         <form id="booking-form" onsubmit="submitBooking(event)">
           <div class="fr2">
-            <label><span class="ko">신청 날짜</span><span class="en">Date</span></label>
-            <input type="date" id="bk-date" required onchange="checkDateAvailability()">
+            <label><span class="ko">신청 시작일</span><span class="en">Start Date</span></label>
+            <input type="date" id="bk-date-start" required onchange="checkDateAvailability()">
+          </div>
+          <div class="fr2">
+            <label><span class="ko">신청 종료일</span><span class="en">End Date</span></label>
+            <input type="date" id="bk-date-end" required onchange="checkDateAvailability()">
             <p id="bk-availability" style="font-size:12px;margin-top:8px;display:none"></p>
           </div>
           <div class="fr2">
@@ -487,10 +491,21 @@ function sf(e){
 var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwtQ1636H4OAoYyNxq0tjTK2qMGQ1dOHTqfDVFz-45ZoUa9FBQ4McADqTjQWgwRoQYv/exec';
 
 function checkDateAvailability(){
-  var dateInput = document.getElementById('bk-date');
+  var startInput = document.getElementById('bk-date-start');
+  var endInput = document.getElementById('bk-date-end');
   var msgEl = document.getElementById('bk-availability');
-  var date = dateInput.value;
-  if (!date) return;
+  var startDate = startInput.value;
+  var endDate = endInput.value;
+  if (!startDate || !endDate) return;
+
+  if (new Date(endDate) < new Date(startDate)){
+    msgEl.style.display = 'block';
+    msgEl.className = 'avail-no';
+    msgEl.textContent = (document.body.classList.contains('en')
+      ? '✕ End date must be on or after the start date'
+      : '✕ 종료일은 시작일과 같거나 이후여야 합니다');
+    return;
+  }
 
   if (SCRIPT_URL.indexOf('YOUR_APPS_SCRIPT') === 0){
     msgEl.style.display = 'block';
@@ -503,15 +518,17 @@ function checkDateAvailability(){
   msgEl.className = '';
   msgEl.textContent = '확인 중...';
 
-  fetch(SCRIPT_URL + '?action=checkAvailability&date=' + date)
+  fetch(SCRIPT_URL + '?action=checkAvailability&date=' + startDate + '&endDate=' + endDate)
     .then(function(res){ return res.json(); })
     .then(function(data){
       if (data.ok && data.available){
         msgEl.className = 'avail-ok';
-        msgEl.textContent = '✓ ' + (document.body.classList.contains('en') ? 'Available' : '신청 가능한 날짜입니다');
+        msgEl.textContent = '✓ ' + (document.body.classList.contains('en') ? 'Available' : '신청 가능한 기간입니다');
       } else {
         msgEl.className = 'avail-no';
-        msgEl.textContent = '✕ ' + (document.body.classList.contains('en') ? 'Already booked' : '이미 마감된 날짜입니다');
+        msgEl.textContent = (document.body.classList.contains('en')
+          ? '✕ Some dates in this range are already booked — please contact us directly.'
+          : '✕ 선택하신 기간 중 이미 예약된 날짜가 포함되어 있습니다. 직접 문의해 주세요.');
       }
     })
     .catch(function(){
@@ -534,13 +551,23 @@ function submitBooking(e){
 
   var payload = {
     action: 'bookSlot',
-    date: document.getElementById('bk-date').value,
+    date: document.getElementById('bk-date-start').value,
+    endDate: document.getElementById('bk-date-end').value,
     programType: document.getElementById('bk-program').value,
     name: document.getElementById('bk-name').value,
     email: document.getElementById('bk-email').value,
     phone: document.getElementById('bk-phone').value,
     note: document.getElementById('bk-note').value
   };
+
+  if (new Date(payload.endDate) < new Date(payload.date)){
+    msg.style.display = 'block';
+    msg.className = 'avail-no';
+    msg.textContent = (document.body.classList.contains('en')
+      ? '✕ End date must be on or after the start date'
+      : '✕ 종료일은 시작일과 같거나 이후여야 합니다');
+    return;
+  }
 
   btn.disabled = true;
   btn.style.opacity = '.6';
@@ -558,12 +585,14 @@ function submitBooking(e){
     if (data.ok){
       msg.className = 'avail-ok';
       msg.textContent = '✓ ' + (document.body.classList.contains('en')
-        ? 'Date reserved! Pending admin confirmation — we will contact you soon.'
-        : '날짜가 예약되었습니다! 운영자 확인 후 확정되며, 곧 연락드리겠습니다.');
+        ? 'Dates reserved! Pending admin confirmation — we will contact you soon.'
+        : '신청 기간이 예약되었습니다! 운영자 확인 후 확정되며, 곧 연락드리겠습니다.');
       document.getElementById('booking-form').reset();
     } else {
       msg.className = 'avail-no';
-      msg.textContent = '✕ ' + (data.message || '이미 마감된 날짜입니다. 다른 날짜를 선택해 주세요.');
+      msg.textContent = (document.body.classList.contains('en')
+        ? '✕ Some dates in this range are already booked. Please contact us directly to arrange this period.'
+        : '✕ 선택하신 기간 중 이미 예약된 날짜가 포함되어 있습니다. 해당 기간 신청은 직접 문의해 주세요.');
     }
   })
   .catch(function(){

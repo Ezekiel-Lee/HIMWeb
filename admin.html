@@ -449,11 +449,19 @@ function renderPendingBookings(bookings){
   listEl.innerHTML = bookings.map(function(b){
     var date = new Date(b.date);
     var dateStr = date.toLocaleDateString('ko-KR', { year:'numeric', month:'2-digit', day:'2-digit' });
+    var rangeStr = dateStr;
+    if (b.endDate){
+      var endDateObj = new Date(b.endDate);
+      /* 종일 이벤트는 종료일이 다음날 0시로 저장되므로 하루 빼서 실제 마지막 날짜로 표시 */
+      endDateObj.setDate(endDateObj.getDate() - 1);
+      var endDateStr = endDateObj.toLocaleDateString('ko-KR', { year:'numeric', month:'2-digit', day:'2-digit' });
+      if (endDateStr !== dateStr) rangeStr = dateStr + ' ~ ' + endDateStr;
+    }
     var desc = (b.description || '').split('\\n').map(escapeHtmlAdmin).join('<br>');
     return '' +
     '<div class="admin-card" data-event-id="' + b.eventId + '">' +
       '<div class="admin-card-body">' +
-        '<p class="admin-card-meta">신청 날짜: ' + dateStr + '</p>' +
+        '<p class="admin-card-meta">신청 기간: ' + rangeStr + '</p>' +
         '<p class="admin-card-title">' + escapeHtmlAdmin(b.title.replace('[승인대기] ', '')) + '</p>' +
         '<p style="line-height:1.9">' + desc + '</p>' +
       '</div>' +
