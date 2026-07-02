@@ -1,7 +1,0 @@
-이 파일은 calendar-booking.gs.txt로 대체되었습니다.
-
-calendar-booking.gs.txt 안에 게시판 로직과 캘린더 예약 로직이
-모두 통합되어 있습니다. Apps Script 프로젝트에는 이 통합 파일
-하나만 넣으시면 됩니다.
-
-설치 방법은 CALENDAR_SETUP_GUIDE.md를 참고해 주세요.

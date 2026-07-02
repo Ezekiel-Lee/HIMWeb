@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════
-   JD MEDIA MISSION — SHARED SCRIPT
+   His Creation iDefend Mission — SHARED SCRIPT
    ═══════════════════════════════════════════════════════ */
 
 /* Language toggle */
