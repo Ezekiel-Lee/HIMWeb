@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>게시글 — HisCreation iDefend Mission (HiM)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Noto+Sans+KR:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#0F1C2E; --navy2:#1B2D45; --navy3:#243650;
+  --gold:#C4913A; --gold2:#D4A84A;
+  --cream:#FAF7F2; --warm:#F0EBE0;
+  --txt:#1a1a1a; --muted:#6B6054;
+  --serif:'Playfair Display','Noto Serif KR',Georgia,serif;
+  --sans:'Noto Sans KR',-apple-system,sans-serif;
+  --ease:cubic-bezier(.25,.1,.25,1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--sans);background:var(--cream);color:var(--txt)}
+a{text-decoration:none;color:inherit}
+img{display:block;max-width:100%}
+
+#ptop{background:var(--navy);padding:20px 32px;display:flex;align-items:center;gap:16px}
+#ptop img{height:26px}
+#ptop .pt-title{font-family:var(--serif);font-size:15px;font-weight:700;color:#fff}
+#pback{margin-left:auto;font-size:12px;color:rgba(255,255,255,.6);letter-spacing:.04em;display:flex;align-items:center;gap:6px;transition:.2s}
+#pback:hover{color:var(--gold2)}
+
+.pwrap{max-width:760px;margin:0 auto;padding:56px 24px 100px}
+.pbadge{display:inline-block;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);border:1px solid rgba(196,145,58,.35);padding:4px 12px;border-radius:2px;margin-bottom:18px}
+.ptitle{font-family:var(--serif);font-size:clamp(24px,3.6vw,38px);font-weight:700;color:var(--navy);line-height:1.25;margin-bottom:16px}
+.pmeta{font-size:12px;color:var(--muted);margin-bottom:36px;display:flex;gap:14px;flex-wrap:wrap}
+.pmeta strong{color:var(--gold)}
+
+.pcontent{font-size:15px;line-height:2;color:var(--txt);white-space:pre-wrap;margin-bottom:36px}
+
+.pimages{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-bottom:36px}
+.pimages img{width:100%;height:220px;object-fit:cover;border-radius:6px;cursor:zoom-in;transition:.2s}
+.pimages img:hover{opacity:.88}
+
+.pyoutube{position:relative;width:100%;aspect-ratio:16/9;border-radius:6px;overflow:hidden;margin-bottom:36px;background:#000}
+.pyoutube iframe{position:absolute;inset:0;width:100%;height:100%;border:none}
+
+#pstate{padding:120px 24px;text-align:center;color:var(--muted);font-size:14px}
+
+/* Lightbox for full-size photo view */
+#lightbox{display:none;position:fixed;inset:0;background:rgba(8,14,22,.92);z-index:3000;align-items:center;justify-content:center;padding:24px;cursor:zoom-out}
+#lightbox.on{display:flex}
+#lightbox img{max-width:92vw;max-height:92vh;object-fit:contain;border-radius:4px}
+
+footer{background:#0D1A27;padding:40px 32px;margin-top:60px}
+.fi{max-width:1180px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
+.flo{display:flex;align-items:center;gap:10px}
+.flo img{height:22px;opacity:.5}
+.flo span{font-family:var(--serif);font-size:14px;font-weight:700;color:rgba(255,255,255,.3);letter-spacing:.04em}
+.fcp{font-size:11px;color:rgba(255,255,255,.14);width:100%;margin-top:10px;letter-spacing:.04em}
+
+@media(max-width:560px){
+  .pwrap{padding:36px 18px 72px}
+  #ptop{padding:16px 20px}
+}
+</style>
+</head>
+<body>
+
+<div id="ptop">
+  <img src="logo_him_allcolor.svg" alt="HiM logo">
+  <span class="pt-title">HisCreation iDefend Mission (HiM)</span>
+  <a id="pback" href="board.html">← 게시판으로 돌아가기</a>
+</div>
+
+<div id="pstate">불러오는 중...</div>
+
+<div class="pwrap" id="pwrap" style="display:none">
+  <span class="pbadge" id="p-category">일반</span>
+  <h1 class="ptitle" id="p-title"></h1>
+  <div class="pmeta">
+    <span>— <strong id="p-name"></strong></span>
+    <span id="p-date"></span>
+  </div>
+
+  <div class="pyoutube" id="p-youtube-wrap" style="display:none">
+    <iframe id="p-youtube-frame" src="" allowfullscreen></iframe>
+  </div>
+
+  <div class="pimages" id="p-images" style="display:none"></div>
+
+  <p class="pcontent" id="p-content"></p>
+</div>
+
+<div id="lightbox" onclick="this.classList.remove('on')"><img id="lightbox-img" src="" alt=""></div>
+
+<footer>
+  <div class="fi">
+    <div class="flo"><img src="logo_him_allcolor.svg" alt="HiM"><span>HisCreation iDefend Mission (HiM)</span></div>
+    <p class="fcp">© 2024 HisCreation iDefend Mission Inc. · 0459 420 315</p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+/* Supabase 프로젝트 설정에서 받은 값 — board.html / admin.html과 동일하게 맞춰주세요 */
+var SUPABASE_URL = 'YOUR_SUPABASE_PROJECT_URL';
+var SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+
+function extractYoutubeId(url){
+  if (!url) return null;
+  var m = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+  return m ? m[1] : null;
+}
+
+function showState(text){
+  var s = document.getElementById('pstate');
+  s.style.display = 'block';
+  s.textContent = text;
+  document.getElementById('pwrap').style.display = 'none';
+}
+
+function openLightbox(src){
+  document.getElementById('lightbox-img').src = src;
+  document.getElementById('lightbox').classList.add('on');
+}
+
+function renderPost(post){
+  document.getElementById('pstate').style.display = 'none';
+  document.getElementById('pwrap').style.display = 'block';
+  document.title = post.title + ' — HisCreation iDefend Mission (HiM)';
+
+  document.getElementById('p-category').textContent = post.is_notice ? '공지사항' : (post.category || '일반');
+  document.getElementById('p-title').textContent = post.title;
+  document.getElementById('p-name').textContent = post.name || '익명';
+  document.getElementById('p-date').textContent = new Date(post.created_at).toLocaleString('ko-KR', { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' });
+  document.getElementById('p-content').textContent = post.content;
+
+  var ytId = extractYoutubeId(post.youtube_url);
+  if (ytId){
+    var wrap = document.getElementById('p-youtube-wrap');
+    wrap.style.display = 'block';
+    document.getElementById('p-youtube-frame').src = 'https://www.youtube.com/embed/' + ytId;
+  }
+
+  if (post.image_urls && post.image_urls.length){
+    var imgWrap = document.getElementById('p-images');
+    imgWrap.style.display = 'grid';
+    imgWrap.innerHTML = post.image_urls.map(function(url){
+      return '<img src="' + url + '" alt="" onclick="openLightbox(\'' + url + '\')">';
+    }).join('');
+  }
+}
+
+(function init(){
+  var params = new URLSearchParams(window.location.search);
+  var id = params.get('id');
+  if (!id){
+    showState('잘못된 접근입니다. 게시글 ID가 없습니다.');
+    return;
+  }
+  if (SUPABASE_URL.indexOf('YOUR_SUPABASE') === 0){
+    showState('⚠ 백엔드가 아직 연결되지 않았습니다 (SUPABASE_URL 미설정)');
+    return;
+  }
+
+  var sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  sb.from('posts').select('*').eq('id', id).eq('status', 'approved').single()
+    .then(function(res){
+      if (res.error || !res.data){
+        showState('게시글을 찾을 수 없습니다. 삭제되었거나 아직 승인되지 않았을 수 있습니다.');
+        return;
+      }
+      renderPost(res.data);
+    })
+    .catch(function(){
+      showState('게시글을 불러오지 못했습니다. 네트워크를 확인해 주세요.');
+    });
+})();
+</script>
+</body>
+</html>

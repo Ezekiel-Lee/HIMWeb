@@ -186,8 +186,10 @@ footer{background:#0D1A27;padding:48px 40px}
 <style>
 #board{background:var(--cream)}
 .blist{max-width:820px}
-.bi{display:grid;grid-template-columns:64px 1fr;gap:28px;align-items:start;padding:32px 0;border-bottom:1px solid rgba(15,28,46,.1)}
+.bi{display:grid;grid-template-columns:64px 1fr;gap:28px;align-items:start;padding:32px 0;border-bottom:1px solid rgba(15,28,46,.1);cursor:pointer;transition:background .2s var(--ease)}
+.bi:hover{background:rgba(196,145,58,.05)}
 .bi:first-child{border-top:1px solid rgba(15,28,46,.1)}
+.bthumb{width:76px;height:76px;object-fit:cover;border-radius:4px;float:left;margin:0 14px 8px 0}
 .bdy{font-family:var(--serif);font-size:34px;font-weight:900;color:var(--navy);line-height:1;text-align:center}
 .bmo{font-size:9px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;text-align:center;margin-top:4px}
 .bbg{display:inline-block;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);border:1px solid rgba(196,145,58,.35);padding:3px 10px;border-radius:2px;margin-bottom:10px}
@@ -317,6 +319,11 @@ footer{background:#0D1A27;padding:48px 40px}
         <input type="url" id="p-youtube" placeholder="https://www.youtube.com/watch?v=..." style="width:100%;padding:11px 14px;border:1px solid rgba(15,28,46,.15);border-radius:3px;font-size:14px;font-family:var(--sans)">
         <p style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.6"><span class="ko">영상 링크를 입력하면 미디어 페이지에도 자동으로 표시됩니다.</span><span class="en">If you include a video link, it will also appear automatically on the Media page.</span></p>
       </div>
+      <div style="margin-bottom:24px">
+        <label style="display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:6px"><span class="ko">사진 첨부 (선택, 여러 장 가능)</span><span class="en">Photos (optional, multiple allowed)</span></label>
+        <input type="file" id="p-images" accept="image/*" multiple style="width:100%;padding:9px 0;font-size:13px;font-family:var(--sans)">
+        <p id="p-images-msg" style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.6"></p>
+      </div>
 
       <div id="admin-notice-row" style="display:none;margin-bottom:24px;padding:16px;background:rgba(196,145,58,.08);border:1px solid rgba(196,145,58,.25);border-radius:4px">
         <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer">
@@ -359,6 +366,7 @@ footer{background:#0D1A27;padding:48px 40px}
   </div>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
 /* ═══════════════════════════════════════════════════════
    JD MEDIA MISSION — SHARED SCRIPT
@@ -431,13 +439,19 @@ function switchTab(btn, id, groupSel){
 }
 
 /* ═══════════════════════════════════════════════════════
-   BOARD — Google Apps Script 연동
+   BOARD — Supabase 연동
    ═══════════════════════════════════════════════════════ */
 
-/* Apps Script 배포 후 받은 웹 앱 URL로 교체해 주세요 */
-var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwtQ1636H4OAoYyNxq0tjTK2qMGQ1dOHTqfDVFz-45ZoUa9FBQ4McADqTjQWgwRoQYv/exec';
+/* Supabase 프로젝트 설정에서 받은 Project URL과 anon public key로 교체해 주세요 */
+var SUPABASE_URL = 'YOUR_SUPABASE_PROJECT_URL';
+var SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
 
-/* 어드민 비밀번호 — 운영자가 직접 원하는 값으로 교체해 주세요 */
+var sb = (SUPABASE_URL.indexOf('YOUR_SUPABASE') !== 0)
+  ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+  : null;
+
+/* 어드민 비밀번호 — 운영자가 직접 원하는 값으로 교체하고, Supabase SQL의
+   admin_check_password 함수 안의 값도 반드시 동일하게 맞춰주세요 */
 var ADMIN_PASSWORD = 'Genesis11';
 
 function isAdmin(){
@@ -487,58 +501,76 @@ function extractYoutubeId(url){
   return m ? m[1] : null;
 }
 
+/* 선택된 이미지 파일들을 board-images 버킷에 업로드하고 공개 URL 배열을 반환 */
+function uploadPostImages(files){
+  if (!files || files.length === 0) return Promise.resolve([]);
+  var uploads = Array.prototype.map.call(files, function(file){
+    var path = Date.now() + '-' + Math.random().toString(36).slice(2, 9) + '-' + file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
+    return sb.storage.from('board-images').upload(path, file)
+      .then(function(res){
+        if (res.error) throw res.error;
+        return sb.storage.from('board-images').getPublicUrl(path).data.publicUrl;
+      });
+  });
+  return Promise.all(uploads);
+}
+
 function submitPost(e){
   e.preventDefault();
   var btn = document.getElementById('post-submit-btn');
   var msg = document.getElementById('post-submit-msg');
   var admin = isAdmin();
+  var fileInput = document.getElementById('p-images');
 
-  var payload = {
-    name: document.getElementById('p-name').value,
-    category: document.getElementById('p-category').value,
-    title: document.getElementById('p-title').value,
-    content: document.getElementById('p-content').value,
-    youtubeUrl: document.getElementById('p-youtube').value,
-    isNotice: admin && document.getElementById('p-is-notice').checked,
-    adminPassword: admin ? ADMIN_PASSWORD : ''
-  };
-
-  if (SCRIPT_URL.indexOf('YOUR_APPS_SCRIPT') === 0){
+  if (!sb){
     msg.style.display = 'block';
-    msg.textContent = '⚠ 관리자가 아직 백엔드 연결을 완료하지 않았습니다 (SCRIPT_URL 미설정)';
+    msg.textContent = '⚠ 관리자가 아직 백엔드 연결을 완료하지 않았습니다 (SUPABASE_URL 미설정)';
     return;
   }
 
+  var name = document.getElementById('p-name').value;
+  var category = document.getElementById('p-category').value;
+  var title = document.getElementById('p-title').value;
+  var content = document.getElementById('p-content').value;
+  var youtubeUrl = document.getElementById('p-youtube').value;
+  var isNotice = admin && document.getElementById('p-is-notice').checked;
+
   btn.disabled = true;
   btn.style.opacity = '.6';
+  var imgMsg = document.getElementById('p-images-msg');
+  if (imgMsg && fileInput.files.length) imgMsg.textContent = document.body.classList.contains('en') ? 'Uploading photos...' : '사진 업로드 중...';
 
-  fetch(SCRIPT_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify(payload)
-  })
-  .then(function(res){ return res.json(); })
-  .then(function(data){
-    msg.style.display = 'block';
-    if (data.ok){
-      var approvedNow = admin;
+  uploadPostImages(fileInput.files)
+    .then(function(imageUrls){
+      if (admin){
+        return sb.rpc('admin_create_post', {
+          p_name: name, p_category: category, p_title: title, p_content: content,
+          p_youtube_url: youtubeUrl || null, p_image_urls: imageUrls, p_is_notice: isNotice, pw: ADMIN_PASSWORD
+        });
+      }
+      return sb.from('posts').insert({
+        name: name, category: category, title: title, content: content,
+        youtube_url: youtubeUrl || null, image_urls: imageUrls
+      });
+    })
+    .then(function(res){
+      if (res.error) throw res.error;
+      msg.style.display = 'block';
       msg.textContent = document.body.classList.contains('en')
-        ? (approvedNow ? '✓ Notice published.' : '✓ Submitted. It will appear after admin approval.')
-        : (approvedNow ? '✓ 게시글이 등록되었습니다.' : '✓ 등록되었습니다. 운영자 승인 후 게시판에 표시됩니다.');
+        ? (admin ? '✓ Post published.' : '✓ Submitted. It will appear after admin approval.')
+        : (admin ? '✓ 게시글이 등록되었습니다.' : '✓ 등록되었습니다. 운영자 승인 후 게시판에 표시됩니다.');
       document.getElementById('post-form').reset();
+      if (imgMsg) imgMsg.textContent = '';
       setTimeout(function(){ closePostModal(); loadUserPosts(); }, 1800);
-    } else {
-      msg.textContent = '오류: ' + (data.error || '알 수 없는 오류');
-    }
-  })
-  .catch(function(err){
-    msg.style.display = 'block';
-    msg.textContent = '전송 실패: 네트워크를 확인해 주세요.';
-  })
-  .finally(function(){
-    btn.disabled = false;
-    btn.style.opacity = '1';
-  });
+    })
+    .catch(function(err){
+      msg.style.display = 'block';
+      msg.textContent = '오류: ' + (err && err.message ? err.message : '전송에 실패했습니다. 네트워크를 확인해 주세요.');
+    })
+    .finally(function(){
+      btn.disabled = false;
+      btn.style.opacity = '1';
+    });
 }
 
 function loadUserPosts(){
@@ -546,26 +578,26 @@ function loadUserPosts(){
   var loadingEl = document.getElementById('posts-loading');
   if (!listEl) return;
 
-  if (SCRIPT_URL.indexOf('YOUR_APPS_SCRIPT') === 0){
+  if (!sb){
     if (loadingEl) loadingEl.innerHTML = '<span style="font-size:13px;color:var(--muted)">백엔드가 아직 연결되지 않았습니다.</span>';
     return;
   }
 
-  fetch(SCRIPT_URL)
-    .then(function(res){ return res.json(); })
-    .then(function(data){
-      if (!data.ok || !data.posts || data.posts.length === 0){
+  sb.from('posts').select('*').eq('status', 'approved').order('created_at', { ascending: false })
+    .then(function(res){
+      if (res.error) throw res.error;
+      var posts = res.data || [];
+      if (posts.length === 0){
         listEl.innerHTML = '<p style="font-size:13px;color:var(--muted);padding:24px 0">아직 게시글이 없습니다. 첫 글을 남겨보세요!</p>';
         return;
       }
 
-      /* 공지(isNotice)가 먼저, 그 안에서는 최신순 */
-      var posts = data.posts.slice();
+      /* 공지(is_notice)가 먼저, 그 안에서는 최신순 */
       posts.sort(function(a, b){
-        var aNotice = (a.isNotice === true || a.isNotice === 'TRUE') ? 1 : 0;
-        var bNotice = (b.isNotice === true || b.isNotice === 'TRUE') ? 1 : 0;
+        var aNotice = a.is_notice ? 1 : 0;
+        var bNotice = b.is_notice ? 1 : 0;
         if (aNotice !== bNotice) return bNotice - aNotice;
-        return new Date(b.timestamp) - new Date(a.timestamp);
+        return new Date(b.created_at) - new Date(a.created_at);
       });
 
       listEl.innerHTML = posts.map(renderPostItem).join('');
@@ -576,27 +608,30 @@ function loadUserPosts(){
 }
 
 function renderPostItem(post){
-  var date = new Date(post.timestamp);
+  var date = new Date(post.created_at);
   var day = String(date.getDate()).padStart(2,'0');
   var month = date.toLocaleString('en-US', { month: 'short' });
-  var ytId = extractYoutubeId(post.youtubeUrl);
+  var ytId = extractYoutubeId(post.youtube_url);
   var ytBadge = ytId ? '<span style="margin-left:8px;font-size:10px;color:var(--gold)">▶ YouTube</span>' : '';
-  var isNotice = (post.isNotice === true || post.isNotice === 'TRUE');
+  var isNotice = !!post.is_notice;
   var pinClass = isNotice ? ' pinned' : '';
   var pinTag = isNotice ? '<p class="pin-tag">📌 <span class="ko">공지사항</span><span class="en">Notice</span></p>' : '';
   var badgeLabel = isNotice ? (document.body.classList.contains('en') ? 'Notice' : '공지사항') : escapeHtml(post.category || '일반');
+  var thumb = (post.image_urls && post.image_urls.length) ? '<img class="bthumb" src="' + escapeHtml(post.image_urls[0]) + '" alt="">' : '';
+  var photoBadge = (post.image_urls && post.image_urls.length) ? '<span style="margin-left:8px;font-size:10px;color:var(--gold)">🖼 ' + post.image_urls.length + '</span>' : '';
 
   return '' +
-  '<div class="bi' + pinClass + '">' +
+  '<a class="bi' + pinClass + '" href="post.html?id=' + encodeURIComponent(post.id) + '" target="_blank" rel="noopener">' +
     '<div><p class="bdy">' + day + '</p><p class="bmo">' + month + '</p></div>' +
     '<div>' +
       pinTag +
       '<span class="bbg">' + badgeLabel + '</span>' +
-      '<p class="bti">' + escapeHtml(post.title) + ytBadge + '</p>' +
+      thumb +
+      '<p class="bti">' + escapeHtml(post.title) + ytBadge + photoBadge + '</p>' +
       '<p class="bde">' + escapeHtml(post.content) + '</p>' +
       '<p style="font-size:11px;color:var(--gold);margin-top:10px">— ' + escapeHtml(post.name || '익명') + '</p>' +
     '</div>' +
-  '</div>';
+  '</a>';
 }
 
 function escapeHtml(str){

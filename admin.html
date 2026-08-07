@@ -345,12 +345,18 @@ function switchTab(btn, id, groupSel){
 
 
 </script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
 /* board.html / calendar-booking.gs.txt의 ADMIN_PASSWORD와 반드시 동일한 값으로 설정해 주세요 */
 var ADMIN_PASSWORD = 'Genesis11';
 
-/* Apps Script 웹 앱 URL — board.html, support.html, media.html과 동일한 URL */
+/* Apps Script 웹 앱 URL — 교육 신청(캘린더) 승인에만 사용됩니다. support.html, media.html과 동일한 URL */
 var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwtQ1636H4OAoYyNxq0tjTK2qMGQ1dOHTqfDVFz-45ZoUa9FBQ4McADqTjQWgwRoQYv/exec';
+
+/* 게시글(사진 포함)은 Supabase — board.html과 동일한 값으로 설정해 주세요 */
+var SUPABASE_URL = 'YOUR_SUPABASE_PROJECT_URL';
+var SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+var sb = (SUPABASE_URL.indexOf('YOUR_SUPABASE') !== 0) ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
 function doLogin(){
   var pw = document.getElementById('gate-password').value;
@@ -387,8 +393,31 @@ function escapeHtmlAdmin(str){
 }
 
 function loadPending(){
+  loadPendingPosts();
+  loadPendingBookings();
+}
+
+function loadPendingPosts(){
+  if (!sb){
+    document.getElementById('pending-posts-list').innerHTML = '<p class="admin-empty">⚠ SUPABASE_URL이 아직 설정되지 않았습니다.</p>';
+    return;
+  }
+  sb.rpc('admin_list_pending', { pw: getAdminPw() })
+    .then(function(res){
+      if (res.error){
+        alert('인증 오류: ' + res.error.message);
+        doLogout();
+        return;
+      }
+      renderPendingPosts(res.data || []);
+    })
+    .catch(function(){
+      document.getElementById('pending-posts-list').innerHTML = '<p class="admin-empty">불러오기 실패. 네트워크를 확인해 주세요.</p>';
+    });
+}
+
+function loadPendingBookings(){
   if (SCRIPT_URL.indexOf('YOUR_APPS_SCRIPT') === 0){
-    document.getElementById('pending-posts-list').innerHTML = '<p class="admin-empty">⚠ SCRIPT_URL이 아직 설정되지 않았습니다.</p>';
     document.getElementById('pending-bookings-list').innerHTML = '<p class="admin-empty">⚠ SCRIPT_URL이 아직 설정되지 않았습니다.</p>';
     return;
   }
@@ -398,14 +427,12 @@ function loadPending(){
     .then(function(data){
       if (!data.ok){
         alert('인증 오류: ' + (data.error || '알 수 없는 오류'));
-        doLogout();
         return;
       }
-      renderPendingPosts(data.pendingPosts || []);
       renderPendingBookings(data.pendingBookings || []);
     })
     .catch(function(){
-      document.getElementById('pending-posts-list').innerHTML = '<p class="admin-empty">불러오기 실패. 네트워크를 확인해 주세요.</p>';
+      document.getElementById('pending-bookings-list').innerHTML = '<p class="admin-empty">불러오기 실패. 네트워크를 확인해 주세요.</p>';
     });
 }
 
@@ -419,15 +446,21 @@ function renderPendingPosts(posts){
   }
 
   listEl.innerHTML = posts.map(function(post){
-    var date = new Date(post.timestamp);
+    var date = new Date(post.created_at);
     var dateStr = date.toLocaleString('ko-KR', { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' });
+    var images = (post.image_urls && post.image_urls.length)
+      ? '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">' +
+          post.image_urls.map(function(u){ return '<img src="' + u + '" style="width:64px;height:64px;object-fit:cover;border-radius:4px">'; }).join('') +
+        '</div>'
+      : '';
     return '' +
     '<div class="admin-card" data-id="' + post.id + '">' +
       '<div class="admin-card-body">' +
         '<p class="admin-card-meta">' + escapeHtmlAdmin(post.category || '일반') + ' · ' + dateStr + ' · ' + escapeHtmlAdmin(post.name || '익명') + '</p>' +
         '<p class="admin-card-title">' + escapeHtmlAdmin(post.title) + '</p>' +
         '<p>' + escapeHtmlAdmin(post.content) + '</p>' +
-        (post.youtubeUrl ? '<p style="color:var(--gold);margin-top:6px">▶ ' + escapeHtmlAdmin(post.youtubeUrl) + '</p>' : '') +
+        (post.youtube_url ? '<p style="color:var(--gold);margin-top:6px">▶ ' + escapeHtmlAdmin(post.youtube_url) + '</p>' : '') +
+        images +
       '</div>' +
       '<div class="admin-card-actions">' +
         '<button class="btn-approve" onclick="approvePost(\'' + post.id + '\', this)">승인</button>' +
@@ -480,15 +513,10 @@ function setCardLoading(btn, loading){
 
 function approvePost(id, btn){
   setCardLoading(btn, true);
-  fetch(SCRIPT_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify({ action: 'approvePost', id: id, password: getAdminPw() })
-  })
-  .then(function(res){ return res.json(); })
-  .then(function(data){
-    if (data.ok) btn.closest('.admin-card').remove();
-    else alert('오류: ' + data.error);
+  sb.rpc('admin_approve_post', { post_id: id, pw: getAdminPw() })
+  .then(function(res){
+    if (!res.error) btn.closest('.admin-card').remove();
+    else alert('오류: ' + res.error.message);
   })
   .finally(function(){ updateCountsAfterRemoval('posts-count'); });
 }
@@ -496,15 +524,10 @@ function approvePost(id, btn){
 function rejectPost(id, btn){
   if (!confirm('이 게시글을 삭제하시겠습니까?')) return;
   setCardLoading(btn, true);
-  fetch(SCRIPT_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify({ action: 'rejectPost', id: id, password: getAdminPw() })
-  })
-  .then(function(res){ return res.json(); })
-  .then(function(data){
-    if (data.ok) btn.closest('.admin-card').remove();
-    else alert('오류: ' + data.error);
+  sb.rpc('admin_reject_post', { post_id: id, pw: getAdminPw() })
+  .then(function(res){
+    if (!res.error) btn.closest('.admin-card').remove();
+    else alert('오류: ' + res.error.message);
   })
   .finally(function(){ updateCountsAfterRemoval('posts-count'); });
 }

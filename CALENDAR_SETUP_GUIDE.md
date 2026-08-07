@@ -34,12 +34,25 @@ https://calendar.google.com/calendar/embed?src=xxxxxxxxxxxx%40group.calendar.goo
 게시판 백엔드(apps-script-backend.gs.txt)에 이미 작성된 코드 외에,
 `calendar-booking.gs.txt` 파일의 코드를 **같은 Apps Script 프로젝트에 추가**하세요.
 
+이 코드는 기본 내장된 `CalendarApp`이 아니라 **Google Calendar API(고급 서비스)**를
+직접 호출합니다. 조회(`Calendar.Events.list`)와 예약 등록/승인/거절
+(`Calendar.Events.insert` / `patch` / `remove`)이 모두 API 기반으로 동작합니다.
+
 1. 게시판용 Apps Script 편집기를 다시 엽니다 (Google Sheets → 확장 프로그램 → Apps Script)
 2. 좌측 파일 목록에서 + 버튼 → "스크립트" → 새 파일 이름을 "Calendar"로 지정
 3. `calendar-booking.gs.txt`의 내용을 전체 복사해서 붙여넣기
 4. 코드 상단의 `CALENDAR_ID`를 2단계에서 복사한 캘린더 ID로 교체
-5. 다시 [배포] → [배포 관리] → 기존 배포의 ✎(편집) 아이콘 클릭 → 새 버전으로 배포
+   (필요하면 `TIME_ZONE`도 캘린더 시간대에 맞게 수정)
+5. **Calendar API 고급 서비스 활성화 (필수)**
+   - 좌측 메뉴에서 "서비스" 옆 + 버튼 클릭
+   - 목록에서 "Calendar API" 선택 → "추가" 클릭
+   - 식별자가 `Calendar`로 표시되는지 확인 (코드에서 `Calendar.Events...`로 호출하는 이름과 일치해야 함)
+   - 추가 후 별도의 Google Cloud Console 설정 없이 바로 사용 가능합니다
+     (표준 GCP 프로젝트로 전환한 경우에만 Cloud Console에서 "Google Calendar API"를
+     직접 사용 설정해야 할 수 있습니다)
+6. 다시 [배포] → [배포 관리] → 기존 배포의 ✎(편집) 아이콘 클릭 → 새 버전으로 배포
    (URL은 그대로 유지되므로 board.html, media.html 수정은 필요 없습니다)
+7. 처음 실행 시 권한 승인 창이 뜨면 "고급 캘린더 서비스" 권한을 포함해 모두 허용하세요
 
 ## 5단계 — support.html에 신청 폼 연결
 
