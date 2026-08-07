@@ -15,7 +15,7 @@
  */
 
 /* 캘린더 설정 페이지에서 복사한 캘린더 ID로 교체해 주세요 */
-const CALENDAR_ID = 'hiscreationidefendmission@gmail.com';
+const CALENDAR_ID = '9fdc43b40474f662ceb0341773ea644660a2e26aa164c97d348c520af7763acf@group.calendar.google.com';
 
 /* board.html / admin.html의 ADMIN_PASSWORD와 반드시 동일한 값으로 설정해 주세요 */
 const ADMIN_PASSWORD = 'Genesis11';
