@@ -207,12 +207,20 @@ body{background:var(--cream)}
 .admin-card-title{font-size:15px;font-weight:600;color:var(--navy);margin-bottom:6px}
 .admin-card-meta{font-size:11px;color:var(--gold);margin-bottom:10px;letter-spacing:.02em}
 .admin-card-actions{display:flex;gap:8px;flex-shrink:0}
-.btn-approve,.btn-reject{padding:9px 18px;border:none;border-radius:4px;font-size:12px;font-weight:500;cursor:pointer;transition:.2s;white-space:nowrap}
+.btn-approve,.btn-reject,.btn-edit{padding:9px 18px;border:none;border-radius:4px;font-size:12px;font-weight:500;cursor:pointer;transition:.2s;white-space:nowrap}
 .btn-approve{background:#639922;color:#fff}
 .btn-approve:hover{background:#3B6D11}
 .btn-reject{background:#E24B4A;color:#fff}
 .btn-reject:hover{background:#A32D2D}
-.btn-approve:disabled,.btn-reject:disabled{opacity:.5;cursor:not-allowed}
+.btn-edit{background:#4A6FA5;color:#fff}
+.btn-edit:hover{background:#35507D}
+.btn-cancel-edit{background:#8a8a8a;color:#fff}
+.btn-cancel-edit:hover{background:#6b6b6b}
+.btn-approve:disabled,.btn-reject:disabled,.btn-edit:disabled{opacity:.5;cursor:not-allowed}
+.edit-field label{display:block;font-size:11px;color:var(--muted);margin-bottom:4px}
+.edit-field input,.edit-field textarea{width:100%;padding:9px 10px;border:1px solid rgba(15,28,46,.15);border-radius:4px;font-size:13px;font-family:var(--sans);margin-bottom:12px}
+.edit-field textarea{resize:vertical}
+.edit-row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 
 .admin-empty{font-size:13px;color:var(--muted);padding:32px;text-align:center;background:#fff;border-radius:6px;border:1px dashed rgba(15,28,46,.15)}
 .notice-flag{display:inline-flex;align-items:center;gap:4px;font-size:10px;background:rgba(196,145,58,.12);color:var(--gold);padding:3px 9px;border-radius:10px;margin-left:8px}
@@ -316,6 +324,16 @@ body{background:var(--cream)}
         <span class="admin-count" id="bookings-count">0</span>
       </div>
       <div id="pending-bookings-list">
+        <p class="admin-empty">불러오는 중...</p>
+      </div>
+    </div>
+
+    <div class="admin-section">
+      <div class="admin-section-title">
+        <h2>확정된 예약 (상세 확인 · 수정 · 삭제)</h2>
+        <span class="admin-count" id="confirmed-bookings-count">0</span>
+      </div>
+      <div id="confirmed-bookings-list">
         <p class="admin-empty">불러오는 중...</p>
       </div>
     </div>
@@ -452,10 +470,17 @@ function escapeHtmlAdmin(str){
   return div.innerHTML.replace(/\n/g, '<br>');
 }
 
+/* input value=""/textarea 안에 안전하게 넣기 위한 이스케이프 (줄바꿈은 유지) */
+function escapeAttr(str){
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
 function loadPending(){
   loadPendingPosts();
   loadPublishedPosts();
   loadPendingBookings();
+  loadConfirmedBookings();
   loadCalendarBookings();
 }
 
@@ -609,38 +634,91 @@ function renderPendingPosts(posts){
   }).join('');
 }
 
+var postsById = {};
+
 function renderPublishedPosts(posts){
   document.getElementById('published-posts-count').textContent = posts.length;
   var listEl = document.getElementById('published-posts-list');
+  postsById = {};
+  posts.forEach(function(p){ postsById[p.id] = p; });
 
   if (posts.length === 0){
     listEl.innerHTML = '<p class="admin-empty">게시된 글이 없습니다.</p>';
     return;
   }
 
-  listEl.innerHTML = posts.map(function(post){
-    var date = new Date(post.created_at);
-    var dateStr = date.toLocaleString('ko-KR', { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' });
-    var images = (post.image_urls && post.image_urls.length)
-      ? '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">' +
-          post.image_urls.map(function(u){ return '<img src="' + u + '" style="width:64px;height:64px;object-fit:cover;border-radius:4px">'; }).join('') +
-        '</div>'
-      : '';
-    var noticeFlag = post.is_notice ? '<span class="notice-flag">📌 공지</span>' : '';
-    return '' +
-    '<div class="admin-card" data-id="' + post.id + '">' +
-      '<div class="admin-card-body">' +
-        '<p class="admin-card-meta">' + escapeHtmlAdmin(post.category || '일반') + ' · ' + dateStr + ' · ' + escapeHtmlAdmin(post.name || '익명') + noticeFlag + '</p>' +
-        '<p class="admin-card-title">' + escapeHtmlAdmin(post.title) + '</p>' +
-        '<p>' + escapeHtmlAdmin(post.content) + '</p>' +
-        (post.youtube_url ? '<p style="color:var(--gold);margin-top:6px">▶ ' + escapeHtmlAdmin(post.youtube_url) + '</p>' : '') +
-        images +
-      '</div>' +
-      '<div class="admin-card-actions">' +
-        '<button class="btn-reject" onclick="deletePublishedPost(\'' + post.id + '\', this)">삭제</button>' +
+  listEl.innerHTML = posts.map(renderPublishedPostCard).join('');
+}
+
+function renderPublishedPostCard(post){
+  var date = new Date(post.created_at);
+  var dateStr = date.toLocaleString('ko-KR', { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' });
+  var images = (post.image_urls && post.image_urls.length)
+    ? '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">' +
+        post.image_urls.map(function(u){ return '<img src="' + u + '" style="width:64px;height:64px;object-fit:cover;border-radius:4px">'; }).join('') +
+      '</div>'
+    : '';
+  var noticeFlag = post.is_notice ? '<span class="notice-flag">📌 공지</span>' : '';
+  return '' +
+  '<div class="admin-card" data-id="' + post.id + '">' +
+    '<div class="admin-card-body">' +
+      '<p class="admin-card-meta">' + escapeHtmlAdmin(post.category || '일반') + ' · ' + dateStr + ' · ' + escapeHtmlAdmin(post.name || '익명') + noticeFlag + '</p>' +
+      '<p class="admin-card-title">' + escapeHtmlAdmin(post.title) + '</p>' +
+      '<p>' + escapeHtmlAdmin(post.content) + '</p>' +
+      (post.youtube_url ? '<p style="color:var(--gold);margin-top:6px">▶ ' + escapeHtmlAdmin(post.youtube_url) + '</p>' : '') +
+      images +
+    '</div>' +
+    '<div class="admin-card-actions">' +
+      '<button class="btn-edit" onclick="editPost(\'' + post.id + '\')">수정</button>' +
+      '<button class="btn-reject" onclick="deletePublishedPost(\'' + post.id + '\', this)">삭제</button>' +
+    '</div>' +
+  '</div>';
+}
+
+function editPost(id){
+  var post = postsById[id];
+  var card = document.querySelector('#published-posts-list .admin-card[data-id="' + id + '"]');
+  if (!post || !card) return;
+  card.innerHTML =
+    '<div class="admin-card-body edit-field" style="grid-column:1/-1">' +
+      '<label>분류</label><input type="text" id="edit-category-' + id + '" value="' + escapeAttr(post.category) + '">' +
+      '<label>제목</label><input type="text" id="edit-title-' + id + '" value="' + escapeAttr(post.title) + '">' +
+      '<label>내용</label><textarea id="edit-content-' + id + '" rows="4">' + escapeAttr(post.content) + '</textarea>' +
+      '<label>YouTube 링크 (선택)</label><input type="text" id="edit-youtube-' + id + '" value="' + escapeAttr(post.youtube_url) + '">' +
+      '<label style="display:flex;align-items:center;gap:8px;margin-bottom:14px"><input type="checkbox" id="edit-notice-' + id + '" style="width:auto" ' + (post.is_notice ? 'checked' : '') + '> 공지사항으로 고정</label>' +
+      '<div style="display:flex;gap:8px">' +
+        '<button class="btn-approve" onclick="savePostEdit(\'' + id + '\')">저장</button>' +
+        '<button class="btn-cancel-edit" onclick="cancelPostEdit(\'' + id + '\')">취소</button>' +
       '</div>' +
     '</div>';
-  }).join('');
+}
+
+function cancelPostEdit(id){
+  var post = postsById[id];
+  var card = document.querySelector('#published-posts-list .admin-card[data-id="' + id + '"]');
+  if (post && card) card.outerHTML = renderPublishedPostCard(post);
+}
+
+function savePostEdit(id){
+  var category = document.getElementById('edit-category-' + id).value;
+  var title = document.getElementById('edit-title-' + id).value;
+  var content = document.getElementById('edit-content-' + id).value;
+  var youtube = document.getElementById('edit-youtube-' + id).value;
+  var notice = document.getElementById('edit-notice-' + id).checked;
+
+  if (!title.trim() || !content.trim()){
+    alert('제목과 내용은 비워둘 수 없습니다.');
+    return;
+  }
+
+  sb.from('posts').update({
+    category: category, title: title, content: content,
+    youtube_url: youtube || null, is_notice: notice
+  }).eq('id', id)
+  .then(function(res){
+    if (res.error){ alert('오류: ' + res.error.message); return; }
+    loadPublishedPosts();
+  });
 }
 
 function deletePublishedPost(id, btn){
@@ -713,7 +791,7 @@ function approveBooking(id, btn){
   setCardLoading(btn, true);
   sb.from('bookings').update({ status: 'confirmed' }).eq('id', id)
   .then(function(res){
-    if (!res.error){ btn.closest('.admin-card').remove(); loadCalendarBookings(); }
+    if (!res.error){ btn.closest('.admin-card').remove(); loadCalendarBookings(); loadConfirmedBookings(); }
     else alert('오류: ' + res.error.message);
   })
   .finally(function(){ updateCountsAfterRemoval('bookings-count'); });
@@ -730,10 +808,133 @@ function rejectBooking(id, btn){
   .finally(function(){ updateCountsAfterRemoval('bookings-count'); });
 }
 
+/* ── 확정된 예약 (상세 · 수정 · 삭제) ── */
+var bookingsById = {};
+
+function loadConfirmedBookings(){
+  if (!sb){
+    document.getElementById('confirmed-bookings-list').innerHTML = '<p class="admin-empty">⚠ SUPABASE_URL이 아직 설정되지 않았습니다.</p>';
+    return;
+  }
+  sb.from('bookings').select('*').eq('status', 'confirmed').order('start_date', { ascending: true })
+    .then(function(res){
+      if (res.error){
+        alert('인증 오류: ' + res.error.message);
+        return;
+      }
+      renderConfirmedBookings(res.data || []);
+    })
+    .catch(function(){
+      document.getElementById('confirmed-bookings-list').innerHTML = '<p class="admin-empty">불러오기 실패. 네트워크를 확인해 주세요.</p>';
+    });
+}
+
+function renderConfirmedBookings(bookings){
+  document.getElementById('confirmed-bookings-count').textContent = bookings.length;
+  var listEl = document.getElementById('confirmed-bookings-list');
+  bookingsById = {};
+  bookings.forEach(function(b){ bookingsById[b.id] = b; });
+
+  if (bookings.length === 0){
+    listEl.innerHTML = '<p class="admin-empty">확정된 예약이 없습니다.</p>';
+    return;
+  }
+  listEl.innerHTML = bookings.map(renderConfirmedBookingCard).join('');
+}
+
+function renderConfirmedBookingCard(b){
+  var rangeStr = b.start_date === b.end_date ? b.start_date : (b.start_date + ' ~ ' + b.end_date);
+  var contact = [b.email, b.phone].filter(Boolean).map(escapeHtmlAdmin).join(' · ');
+  var note = b.note ? '<p style="line-height:1.9;margin-top:6px">' + escapeHtmlAdmin(b.note) + '</p>' : '';
+  return '' +
+  '<div class="admin-card" data-id="' + b.id + '">' +
+    '<div class="admin-card-body">' +
+      '<p class="admin-card-meta">신청 기간: ' + rangeStr + ' · ' + escapeHtmlAdmin(b.requester_name) + (contact ? ' · ' + contact : '') + '</p>' +
+      '<p class="admin-card-title">' + escapeHtmlAdmin(b.title) + '</p>' +
+      note +
+    '</div>' +
+    '<div class="admin-card-actions">' +
+      '<button class="btn-edit" onclick="editBooking(\'' + b.id + '\')">수정</button>' +
+      '<button class="btn-reject" onclick="deleteConfirmedBooking(\'' + b.id + '\', this)">삭제</button>' +
+    '</div>' +
+  '</div>';
+}
+
+function editBooking(id){
+  var b = bookingsById[id];
+  var card = document.querySelector('#confirmed-bookings-list .admin-card[data-id="' + id + '"]');
+  if (!b || !card) return;
+  card.innerHTML =
+    '<div class="admin-card-body edit-field" style="grid-column:1/-1">' +
+      '<label>프로그램</label><input type="text" id="edit-bk-title-' + id + '" value="' + escapeAttr(b.title) + '">' +
+      '<label>신청자 이름</label><input type="text" id="edit-bk-name-' + id + '" value="' + escapeAttr(b.requester_name) + '">' +
+      '<div class="edit-row2">' +
+        '<div><label>이메일</label><input type="email" id="edit-bk-email-' + id + '" value="' + escapeAttr(b.email) + '"></div>' +
+        '<div><label>연락처</label><input type="text" id="edit-bk-phone-' + id + '" value="' + escapeAttr(b.phone) + '"></div>' +
+      '</div>' +
+      '<div class="edit-row2">' +
+        '<div><label>시작일</label><input type="date" id="edit-bk-start-' + id + '" value="' + b.start_date + '"></div>' +
+        '<div><label>종료일</label><input type="date" id="edit-bk-end-' + id + '" value="' + b.end_date + '"></div>' +
+      '</div>' +
+      '<label>메모</label><textarea id="edit-bk-note-' + id + '" rows="3">' + escapeAttr(b.note) + '</textarea>' +
+      '<div style="display:flex;gap:8px">' +
+        '<button class="btn-approve" onclick="saveBookingEdit(\'' + id + '\')">저장</button>' +
+        '<button class="btn-cancel-edit" onclick="cancelBookingEdit(\'' + id + '\')">취소</button>' +
+      '</div>' +
+    '</div>';
+}
+
+function cancelBookingEdit(id){
+  var b = bookingsById[id];
+  var card = document.querySelector('#confirmed-bookings-list .admin-card[data-id="' + id + '"]');
+  if (b && card) card.outerHTML = renderConfirmedBookingCard(b);
+}
+
+function saveBookingEdit(id){
+  var title = document.getElementById('edit-bk-title-' + id).value;
+  var name = document.getElementById('edit-bk-name-' + id).value;
+  var email = document.getElementById('edit-bk-email-' + id).value;
+  var phone = document.getElementById('edit-bk-phone-' + id).value;
+  var startDate = document.getElementById('edit-bk-start-' + id).value;
+  var endDate = document.getElementById('edit-bk-end-' + id).value;
+  var note = document.getElementById('edit-bk-note-' + id).value;
+
+  if (!title.trim() || !name.trim()){
+    alert('프로그램과 이름은 비워둘 수 없습니다.');
+    return;
+  }
+  if (new Date(endDate) < new Date(startDate)){
+    alert('종료일은 시작일과 같거나 이후여야 합니다.');
+    return;
+  }
+
+  sb.from('bookings').update({
+    title: title, requester_name: name, email: email || null, phone: phone || null,
+    start_date: startDate, end_date: endDate, note: note || null
+  }).eq('id', id)
+  .then(function(res){
+    if (res.error){ alert('오류: ' + res.error.message); return; }
+    loadConfirmedBookings();
+    loadCalendarBookings();
+  });
+}
+
+function deleteConfirmedBooking(id, btn){
+  if (!confirm('해당 예약을 삭제하시겠습니까?')) return;
+  setCardLoading(btn, true);
+  sb.from('bookings').delete().eq('id', id)
+  .then(function(res){
+    if (!res.error){ btn.closest('.admin-card').remove(); loadCalendarBookings(); }
+    else alert('오류: ' + res.error.message);
+  })
+  .finally(function(){ updateCountsAfterRemoval('confirmed-bookings-count'); });
+}
+
 var COUNT_LIST_MAP = {
   'posts-count': { listId: 'pending-posts-list', emptyText: '대기 중인 게시글이 없습니다.' },
   'published-posts-count': { listId: 'published-posts-list', emptyText: '게시된 글이 없습니다.' },
-  'bookings-count': { listId: 'pending-bookings-list', emptyText: '대기 중인 교육 신청이 없습니다.' }
+  'bookings-count': { listId: 'pending-bookings-list', emptyText: '대기 중인 교육 신청이 없습니다.' },
+  'confirmed-bookings-count': { listId: 'confirmed-bookings-list', emptyText: '확정된 예약이 없습니다.' }
 };
 
 function updateCountsAfterRemoval(countId){
