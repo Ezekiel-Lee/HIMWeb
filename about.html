@@ -203,7 +203,22 @@ footer{background:#0D1A27;padding:48px 40px}
 /* Timeline */
 #timeline{background:#0F1C2E;color:#fff}
 #activities{background:var(--cream)}
-.activities-calendar{background:#fff;border:1px solid rgba(15,28,46,.1);border-radius:6px;padding:16px;overflow:hidden;max-width:900px}
+.activities-calendar{background:#fff;border:1px solid rgba(15,28,46,.1);border-radius:6px;padding:24px;overflow:hidden;max-width:900px}
+
+/* ── 활동 달력 (읽기 전용) ── */
+.cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.cal-nav{padding:9px 16px;background:var(--warm);border:1px solid rgba(15,28,46,.12);border-radius:4px;font-size:13px;font-weight:500;color:var(--navy);cursor:pointer}
+.cal-nav:hover{background:#fff;border-color:var(--gold)}
+.cal-month-label{font-family:var(--serif);font-size:19px;font-weight:700;color:var(--navy)}
+.cal-legend{display:flex;flex-wrap:wrap;gap:16px;margin-bottom:16px;font-size:12px;color:var(--muted)}
+.cal-legend span{display:inline-flex;align-items:center;gap:6px}
+.cal-dot{width:12px;height:12px;border-radius:3px;display:inline-block}
+.cal-dot-confirmed{background:#E29B9B}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal-dow{text-align:center;font-size:12px;color:var(--muted);font-weight:500;padding:6px 0}
+.cal-day{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:500;border-radius:4px;color:var(--txt);background:#fff;border:1px solid rgba(15,28,46,.08)}
+.cal-day.cal-empty{border:none;background:transparent}
+.cal-day.cal-confirmed{background:#E29B9B;color:#6B1F1F;border-color:transparent}
 .tl{position:relative;max-width:760px;margin:0 auto;padding-left:32px;border-left:1px solid rgba(255,255,255,.12)}
 .tl-item{position:relative;padding-bottom:48px}
 .tl-item:last-child{padding-bottom:0}
@@ -361,7 +376,15 @@ footer{background:#0D1A27;padding:48px 40px}
     <h2 class="st rv" style="margin-bottom:8px"><span class="ko">우리가 <em>해온 일들</em></span><span class="en">What We've <em>Been Doing</em></span></h2>
     <p class="sl rv d1" style="margin-bottom:32px"><span class="ko">창조과학 교실, 세미나, 캠프 등 선교회의 모든 활동 일정을 한눈에 확인하세요.</span><span class="en">See all our Creation Science classrooms, seminars, and camps at a glance.</span></p>
     <div class="activities-calendar rv d2">
-      <iframe src="https://calendar.google.com/calendar/embed?src=9fdc43b40474f662ceb0341773ea644660a2e26aa164c97d348c520af7763acf%40group.calendar.google.com&ctz=Australia%2FMelbourne&mode=MONTH" style="border: 0; display:block" width="100%" height="600" frameborder="0" scrolling="no"></iframe>
+      <div class="cal-header">
+        <button type="button" class="cal-nav" onclick="calChangeMonth(-1)">◀ <span class="ko">이전 달</span><span class="en">Prev</span></button>
+        <span class="cal-month-label" id="cal-month-label"></span>
+        <button type="button" class="cal-nav" onclick="calChangeMonth(1)"><span class="ko">다음 달</span><span class="en">Next</span> ▶</button>
+      </div>
+      <div class="cal-legend">
+        <span><i class="cal-dot cal-dot-confirmed"></i><span class="ko">활동 예정</span><span class="en">Scheduled</span></span>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
     </div>
   </div>
 </section>
@@ -424,6 +447,7 @@ footer{background:#0D1A27;padding:48px 40px}
   </div>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
 /* ═══════════════════════════════════════════════════════
    JD MEDIA MISSION — SHARED SCRIPT
@@ -490,6 +514,70 @@ function switchTab(btn, id, groupSel){
   document.getElementById(id).classList.add('on');
 }
 
+/* ═══════════════════════════════════════════════════════
+   활동 달력 (읽기 전용, Supabase — 확정된 예약만 표시)
+   ═══════════════════════════════════════════════════════ */
+var SUPABASE_URL = 'https://cizlnyibyovmhhfljygt.supabase.co';
+var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpemxueWlieW92bWhoZmxqeWd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYzMDI3MDAsImV4cCI6MjEwMTg3ODcwMH0.mE_Pd-Lnn3877UoFp86vJeDE3k818N8wWCDkGS0cUms';
+var sb = (SUPABASE_URL.indexOf('YOUR_SUPABASE') !== 0)
+  ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+  : null;
+
+var calBookings = [];
+var calViewDate = new Date(); calViewDate.setDate(1);
+var CAL_DOW_KO = ['일','월','화','수','목','금','토'];
+
+function calChangeMonth(delta){
+  calViewDate.setMonth(calViewDate.getMonth() + delta);
+  renderCalendarGrid();
+}
+
+function calStatusForDate(y, m, d){
+  var target = new Date(y, m, d);
+  target.setHours(0,0,0,0);
+  var found = calBookings.some(function(b){
+    var s = new Date(b.start_date + 'T00:00:00');
+    var e = new Date(b.end_date + 'T00:00:00');
+    return target >= s && target <= e && b.status === 'confirmed';
+  });
+  return found ? 'confirmed' : null;
+}
+
+function renderCalendarGrid(){
+  var grid = document.getElementById('cal-grid');
+  var label = document.getElementById('cal-month-label');
+  if (!grid) return;
+
+  var y = calViewDate.getFullYear();
+  var m = calViewDate.getMonth();
+  label.textContent = y + '년 ' + (m + 1) + '월';
+
+  var html = CAL_DOW_KO.map(function(d){ return '<div class="cal-dow">' + d + '</div>'; }).join('');
+  var firstDow = new Date(y, m, 1).getDay();
+  var daysInMonth = new Date(y, m + 1, 0).getDate();
+
+  for (var i = 0; i < firstDow; i++){
+    html += '<div class="cal-day cal-empty"></div>';
+  }
+  for (var d = 1; d <= daysInMonth; d++){
+    var status = calStatusForDate(y, m, d);
+    var cls = status ? ' cal-' + status : '';
+    html += '<div class="cal-day' + cls + '">' + d + '</div>';
+  }
+  grid.innerHTML = html;
+}
+
+function loadCalendarBookings(){
+  if (!sb){ renderCalendarGrid(); return; }
+  sb.rpc('list_booked_dates')
+    .then(function(res){
+      if (!res.error) calBookings = res.data || [];
+      renderCalendarGrid();
+    })
+    .catch(function(){ renderCalendarGrid(); });
+}
+
+document.addEventListener('DOMContentLoaded', loadCalendarBookings);
 </script>
 </body>
 </html>

@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Noto+Sans+KR:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 <style>
 /* ═══════════════════════════════════════════════════════
    JD MEDIA MISSION — SHARED STYLES
@@ -231,6 +232,26 @@ footer{background:#0D1A27;padding:48px 40px}
 .avail-ok{color:#1D9E75}
 .avail-no{color:#D85A30}
 
+/* ── 예약 달력 위젯 (읽기 전용, 큰 글씨/명확한 색상) ── */
+.cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.cal-nav{padding:9px 16px;background:var(--warm);border:1px solid rgba(15,28,46,.12);border-radius:4px;font-size:13px;font-weight:500;color:var(--navy);cursor:pointer}
+.cal-nav:hover{background:#fff;border-color:var(--gold)}
+.cal-month-label{font-family:var(--serif);font-size:19px;font-weight:700;color:var(--navy)}
+.cal-legend{display:flex;flex-wrap:wrap;gap:16px;margin-bottom:16px;font-size:12px;color:var(--muted)}
+.cal-legend span{display:inline-flex;align-items:center;gap:6px}
+.cal-dot{width:12px;height:12px;border-radius:3px;display:inline-block}
+.cal-dot-available{background:#fff;border:1px solid rgba(15,28,46,.2)}
+.cal-dot-pending{background:#F4D58D}
+.cal-dot-confirmed{background:#E29B9B}
+.cal-dot-past{background:#EDEAE3}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal-dow{text-align:center;font-size:12px;color:var(--muted);font-weight:500;padding:6px 0}
+.cal-day{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:500;border-radius:4px;color:var(--txt);background:#fff;border:1px solid rgba(15,28,46,.08)}
+.cal-day.cal-empty{border:none;background:transparent}
+.cal-day.cal-pending{background:#F4D58D;color:#6B5417;border-color:transparent}
+.cal-day.cal-confirmed{background:#E29B9B;color:#6B1F1F;border-color:transparent}
+.cal-day.cal-past{background:#F5F3EE;color:rgba(15,28,46,.28);border-color:transparent}
+
 @media(max-width:860px){
   .cgr{grid-template-columns:1fr;gap:44px}
   .ways-grid{grid-template-columns:1fr}
@@ -305,7 +326,17 @@ footer{background:#0D1A27;padding:48px 40px}
 
     <div class="booking-grid rv d2">
       <div class="booking-calendar">
-        <iframe src="https://calendar.google.com/calendar/embed?src=9fdc43b40474f662ceb0341773ea644660a2e26aa164c97d348c520af7763acf%40group.calendar.google.com&ctz=Australia%2FMelbourne&mode=MONTH" style="border: 0; display:block" width="100%" height="600" frameborder="0" scrolling="no"></iframe>
+        <div class="cal-header">
+          <button type="button" class="cal-nav" onclick="calChangeMonth(-1)">◀ <span class="ko">이전 달</span><span class="en">Prev</span></button>
+          <span class="cal-month-label" id="cal-month-label"></span>
+          <button type="button" class="cal-nav" onclick="calChangeMonth(1)"><span class="ko">다음 달</span><span class="en">Next</span> ▶</button>
+        </div>
+        <div class="cal-legend">
+          <span><i class="cal-dot cal-dot-available"></i><span class="ko">신청 가능</span><span class="en">Available</span></span>
+          <span><i class="cal-dot cal-dot-pending"></i><span class="ko">승인 대기중</span><span class="en">Pending</span></span>
+          <span><i class="cal-dot cal-dot-confirmed"></i><span class="ko">예약 확정</span><span class="en">Confirmed</span></span>
+        </div>
+        <div class="cal-grid" id="cal-grid"></div>
       </div>
 
       <div class="booking-form-box">
@@ -342,6 +373,10 @@ footer{background:#0D1A27;padding:48px 40px}
           <div class="fr2">
             <label><span class="ko">메모 (선택)</span><span class="en">Note (optional)</span></label>
             <textarea id="bk-note" rows="3" placeholder="참가 인원, 문의사항 등"></textarea>
+          </div>
+          <div style="margin-bottom:16px">
+            <div id="bk-turnstile-widget"></div>
+            <p id="bk-turnstile-msg" style="display:none;font-size:11px;color:var(--muted)">⚠ CAPTCHA가 아직 설정되지 않았습니다.</p>
           </div>
           <button type="submit" class="bpri" id="bk-submit-btn" style="width:100%;justify-content:center">
             <span class="ko">신청하기</span><span class="en">Book This Date</span>
@@ -403,6 +438,7 @@ footer{background:#0D1A27;padding:48px 40px}
   </div>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
 /* ═══════════════════════════════════════════════════════
    JD MEDIA MISSION — SHARED SCRIPT
@@ -483,12 +519,92 @@ function sf(e){
 }
 
 /* ═══════════════════════════════════════════════════════
-   교육 신청 — Google Calendar 연동
+   교육 신청 — Supabase 연동
    ═══════════════════════════════════════════════════════ */
 
-/* board.html과 동일한 Apps Script 웹 앱 URL을 넣어주세요 */
-var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz7Na0YOBCwoqPx0s8OC1ad3aEVqJgms16HPj7a7OS613IKKNW1Oo95jS3LBK5c8fpc/exec';
+/* board.html / admin.html과 동일한 값으로 설정해 주세요 */
+var SUPABASE_URL = 'https://cizlnyibyovmhhfljygt.supabase.co';
+var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpemxueWlieW92bWhoZmxqeWd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYzMDI3MDAsImV4cCI6MjEwMTg3ODcwMH0.mE_Pd-Lnn3877UoFp86vJeDE3k818N8wWCDkGS0cUms';
+var sb = (SUPABASE_URL.indexOf('YOUR_SUPABASE') !== 0)
+  ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+  : null;
 
+/* Cloudflare Turnstile — board.html과 동일한 Site Key */
+var TURNSTILE_SITE_KEY = '0x4AAAAAAELj8zeu0wJwVwho';
+var bkTurnstileWidgetId = null;
+
+function renderBkTurnstile(){
+  if (typeof turnstile === 'undefined'){ setTimeout(renderBkTurnstile, 300); return; }
+  if (TURNSTILE_SITE_KEY.indexOf('YOUR_TURNSTILE') === 0){
+    var msg = document.getElementById('bk-turnstile-msg');
+    if (msg) msg.style.display = 'block';
+    return;
+  }
+  bkTurnstileWidgetId = turnstile.render('#bk-turnstile-widget', { sitekey: TURNSTILE_SITE_KEY });
+}
+
+/* ── 달력 위젯 (읽기 전용, 신청 가능/대기중/확정 표시) ── */
+var calBookings = [];
+var calViewDate = new Date(); calViewDate.setDate(1);
+var CAL_DOW_KO = ['일','월','화','수','목','금','토'];
+
+function calChangeMonth(delta){
+  calViewDate.setMonth(calViewDate.getMonth() + delta);
+  renderCalendarGrid();
+}
+
+function calStatusForDate(y, m, d){
+  var target = new Date(y, m, d);
+  target.setHours(0,0,0,0);
+  var today = new Date(); today.setHours(0,0,0,0);
+  if (target < today) return 'past';
+  var status = null;
+  calBookings.forEach(function(b){
+    var s = new Date(b.start_date + 'T00:00:00');
+    var e = new Date(b.end_date + 'T00:00:00');
+    if (target >= s && target <= e){
+      if (b.status === 'confirmed') status = 'confirmed';
+      else if (b.status === 'pending' && status !== 'confirmed') status = 'pending';
+    }
+  });
+  return status; // null = available
+}
+
+function renderCalendarGrid(){
+  var grid = document.getElementById('cal-grid');
+  var label = document.getElementById('cal-month-label');
+  if (!grid) return;
+
+  var y = calViewDate.getFullYear();
+  var m = calViewDate.getMonth();
+  label.textContent = y + '년 ' + (m + 1) + '월';
+
+  var html = CAL_DOW_KO.map(function(d){ return '<div class="cal-dow">' + d + '</div>'; }).join('');
+  var firstDow = new Date(y, m, 1).getDay();
+  var daysInMonth = new Date(y, m + 1, 0).getDate();
+
+  for (var i = 0; i < firstDow; i++){
+    html += '<div class="cal-day cal-empty"></div>';
+  }
+  for (var d = 1; d <= daysInMonth; d++){
+    var status = calStatusForDate(y, m, d);
+    var cls = status ? ' cal-' + status : '';
+    html += '<div class="cal-day' + cls + '">' + d + '</div>';
+  }
+  grid.innerHTML = html;
+}
+
+function loadCalendarBookings(){
+  if (!sb) return;
+  sb.rpc('list_booked_dates')
+    .then(function(res){
+      if (!res.error) calBookings = res.data || [];
+      renderCalendarGrid();
+    })
+    .catch(function(){ renderCalendarGrid(); });
+}
+
+/* ── 신청 가능 여부 실시간 확인 ── */
 function checkDateAvailability(){
   var startInput = document.getElementById('bk-date-start');
   var endInput = document.getElementById('bk-date-end');
@@ -506,7 +622,7 @@ function checkDateAvailability(){
     return;
   }
 
-  if (SCRIPT_URL.indexOf('YOUR_APPS_SCRIPT') === 0){
+  if (!sb){
     msgEl.style.display = 'block';
     msgEl.className = 'avail-no';
     msgEl.textContent = '⚠ 백엔드가 아직 연결되지 않았습니다.';
@@ -517,10 +633,9 @@ function checkDateAvailability(){
   msgEl.className = '';
   msgEl.textContent = '확인 중...';
 
-  fetch(SCRIPT_URL + '?action=checkAvailability&date=' + startDate + '&endDate=' + endDate)
-    .then(function(res){ return res.json(); })
-    .then(function(data){
-      if (data.ok && data.available){
+  sb.rpc('check_availability', { p_start_date: startDate, p_end_date: endDate })
+    .then(function(res){
+      if (!res.error && res.data){
         msgEl.className = 'avail-ok';
         msgEl.textContent = '✓ ' + (document.body.classList.contains('en') ? 'Available' : '신청 가능한 기간입니다');
       } else {
@@ -541,30 +656,30 @@ function submitBooking(e){
   var btn = document.getElementById('bk-submit-btn');
   var msg = document.getElementById('bk-result-msg');
 
-  if (SCRIPT_URL.indexOf('YOUR_APPS_SCRIPT') === 0){
+  if (!sb){
     msg.style.display = 'block';
     msg.className = 'avail-no';
     msg.textContent = '⚠ 관리자가 아직 백엔드 연결을 완료하지 않았습니다.';
     return;
   }
 
-  var payload = {
-    action: 'bookSlot',
-    date: document.getElementById('bk-date-start').value,
-    endDate: document.getElementById('bk-date-end').value,
-    programType: document.getElementById('bk-program').value,
-    name: document.getElementById('bk-name').value,
-    email: document.getElementById('bk-email').value,
-    phone: document.getElementById('bk-phone').value,
-    note: document.getElementById('bk-note').value
-  };
+  var startDate = document.getElementById('bk-date-start').value;
+  var endDate = document.getElementById('bk-date-end').value;
 
-  if (new Date(payload.endDate) < new Date(payload.date)){
+  if (new Date(endDate) < new Date(startDate)){
     msg.style.display = 'block';
     msg.className = 'avail-no';
     msg.textContent = (document.body.classList.contains('en')
       ? '✕ End date must be on or after the start date'
       : '✕ 종료일은 시작일과 같거나 이후여야 합니다');
+    return;
+  }
+
+  var token = (bkTurnstileWidgetId !== null && typeof turnstile !== 'undefined') ? turnstile.getResponse(bkTurnstileWidgetId) : '';
+  if (!token){
+    msg.style.display = 'block';
+    msg.className = 'avail-no';
+    msg.textContent = document.body.classList.contains('en') ? 'Please complete the CAPTCHA.' : 'CAPTCHA를 완료해 주세요.';
     return;
   }
 
@@ -574,35 +689,42 @@ function submitBooking(e){
   msg.className = '';
   msg.textContent = '신청 처리 중...';
 
-  fetch(SCRIPT_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify(payload)
+  sb.rpc('request_booking', {
+    p_title: document.getElementById('bk-program').value,
+    p_requester_name: document.getElementById('bk-name').value,
+    p_email: document.getElementById('bk-email').value,
+    p_phone: document.getElementById('bk-phone').value,
+    p_note: document.getElementById('bk-note').value,
+    p_start_date: startDate,
+    p_end_date: endDate,
+    p_turnstile_token: token
   })
-  .then(function(res){ return res.json(); })
-  .then(function(data){
-    if (data.ok){
-      msg.className = 'avail-ok';
-      msg.textContent = '✓ ' + (document.body.classList.contains('en')
-        ? 'Dates reserved! Pending admin confirmation — we will contact you soon.'
-        : '신청 기간이 예약되었습니다! 운영자 확인 후 확정되며, 곧 연락드리겠습니다.');
-      document.getElementById('booking-form').reset();
-    } else {
-      msg.className = 'avail-no';
-      msg.textContent = (document.body.classList.contains('en')
-        ? '✕ Some dates in this range are already booked. Please contact us directly to arrange this period.'
-        : '✕ 선택하신 기간 중 이미 예약된 날짜가 포함되어 있습니다. 해당 기간 신청은 직접 문의해 주세요.');
-    }
+  .then(function(res){
+    if (res.error) throw res.error;
+    msg.className = 'avail-ok';
+    msg.textContent = '✓ ' + (document.body.classList.contains('en')
+      ? 'Dates reserved! Pending admin confirmation — we will contact you soon.'
+      : '신청 기간이 예약되었습니다! 운영자 확인 후 확정되며, 곧 연락드리겠습니다.');
+    document.getElementById('booking-form').reset();
+    if (bkTurnstileWidgetId !== null && typeof turnstile !== 'undefined') turnstile.reset(bkTurnstileWidgetId);
+    loadCalendarBookings();
   })
-  .catch(function(){
+  .catch(function(err){
     msg.className = 'avail-no';
-    msg.textContent = '전송 실패: 네트워크를 확인해 주세요.';
+    msg.textContent = (err && err.message) ? err.message : '전송 실패: 네트워크를 확인해 주세요.';
+    if (bkTurnstileWidgetId !== null && typeof turnstile !== 'undefined') turnstile.reset(bkTurnstileWidgetId);
   })
   .finally(function(){
     btn.disabled = false;
     btn.style.opacity = '1';
   });
 }
+
+document.addEventListener('DOMContentLoaded', function(){
+  renderCalendarGrid();
+  loadCalendarBookings();
+  renderBkTurnstile();
+});
 </script>
 </body>
 </html>

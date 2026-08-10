@@ -1,11 +1,13 @@
-# 게시판(사진 첨부) Supabase 연동 설정 가이드 — 보안 강화판
+# HiM 웹사이트 — Supabase 연동 설정 가이드
 
-게시판(board.html)이 사진 업로드를 지원하며, Google Sheets/Apps Script 대신
-**Supabase**(무료 관리형 DB + 파일 저장소)를 사용합니다. 관리자 인증은 공유
-비밀번호가 아니라 **실제 로그인 계정(Supabase Auth)**을 사용하고, 일반 방문자의
-글 등록에는 **Cloudflare Turnstile(캡차)**가 적용되어 자동 스팸을 막습니다.
-교육 신청(캘린더 예약) 기능은 기존처럼 Google Apps Script를 그대로 사용하므로
-건드릴 필요 없습니다.
+게시판(사진 포함)과 교육 신청(캘린더 예약)이 모두 Google Sheets/Apps Script/
+Google Calendar 대신 **Supabase**(무료 관리형 DB + 파일 저장소) 하나로 통합되었습니다.
+더 이상 Google 계정에 의존하지 않아서, 이전에 겪었던 "Apps Script 배포가
+서비스 약관 위반으로 막히는" 문제에서 완전히 벗어났습니다.
+
+관리자 인증은 공유 비밀번호가 아니라 **실제 로그인 계정(Supabase Auth)**을 사용하고,
+일반 방문자의 글 등록·교육 신청에는 **Cloudflare Turnstile(캡차)**가 적용되어
+자동 스팸을 막습니다.
 
 ## 1단계 — Supabase 프로젝트 생성
 
@@ -47,11 +49,16 @@
    ```
 
 이 스크립트가 자동으로 해주는 일:
-- `posts` 테이블 + 사진 URL 배열 저장
-- `admin_users`에 등록된 로그인 계정만 승인/거절/즉시게시 가능하도록 하는 보안 정책(RLS)
-- 일반 방문자의 글 등록은 `submit_post()` 함수를 통해서만 가능하며, 이 함수가
-  Turnstile 캡차를 서버에서 직접 검증한 뒤에만 저장 (실패 시 자동 차단)
+- `posts` 테이블 + 사진 URL 배열 저장 (게시판)
+- `bookings` 테이블 (교육 신청 — 시작일/종료일, 신청자 정보, 승인 상태)
+- `admin_users`에 등록된 로그인 계정만 승인/거절/삭제가 가능하도록 하는 보안 정책(RLS)
+- 일반 방문자의 글 등록·교육 신청은 각각 `submit_post()` / `request_booking()` 함수를
+  통해서만 가능하며, 두 함수 모두 Turnstile 캡차를 서버에서 직접 검증한 뒤에만 저장
+  (실패 시 자동 차단), `request_booking()`은 날짜 중복도 서버에서 재확인합니다
 - 사진 저장용 `board-images` 버킷 자동 생성 (5MB, jpg/png/webp/gif 제한)
+
+**⚠ 이미 이전 버전의 스키마를 실행한 적이 있다면**, 이 파일을 다시 통째로 실행해도
+안전합니다 (기존 정책/함수를 안전하게 교체합니다). `posts` 테이블 데이터는 유지됩니다.
 
 ## 5단계 — API 키 확인
 
@@ -62,16 +69,17 @@
 
 ## 6단계 — 웹사이트 파일에 값 붙여넣기
 
-**board.html**, **post.html**, **admin.html** 3개 파일 각각에서 아래 두 줄을 찾아
-5단계에서 복사한 값으로 교체하세요. (3개 파일 모두 동일한 값)
+**board.html, post.html, admin.html, media.html, support.html, about.html** —
+6개 파일 각각에서 아래 두 줄을 찾아 5단계에서 복사한 값으로 교체하세요.
+(6개 파일 모두 동일한 값)
 
 ```js
 var SUPABASE_URL = 'YOUR_SUPABASE_PROJECT_URL';
 var SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
 ```
 
-그리고 **board.html**에서만 아래 한 줄을 찾아 3단계의 **Site Key**로 교체하세요.
-(Secret Key가 아니라 Site Key입니다 — Site Key는 공개되어도 안전합니다)
+그리고 **board.html, support.html** 두 파일에서 아래 한 줄을 찾아 3단계의
+**Site Key**로 교체하세요. (Secret Key가 아니라 Site Key입니다 — 공개되어도 안전합니다)
 
 ```js
 var TURNSTILE_SITE_KEY = 'YOUR_TURNSTILE_SITE_KEY';
@@ -79,27 +87,30 @@ var TURNSTILE_SITE_KEY = 'YOUR_TURNSTILE_SITE_KEY';
 
 ## 7단계 — 확인
 
+**게시판**
 1. board.html에서 "✎ 글쓰기" → 캡차 체크 → 사진 1~2장 첨부해서 등록
-   (캡차를 완료하지 않으면 등록되지 않습니다)
-2. Supabase 대시보드 → **Table Editor** → `posts` 테이블에서 방금 쓴 글이
-   `status = pending`으로 들어왔는지 확인
-3. admin.html 접속 → 2단계에서 만든 **이메일/비밀번호로 로그인**
-   → "승인 대기 게시글"에 방금 글이 사진과 함께 보이는지 확인 → "승인" 클릭
-4. board.html로 돌아가 새로고침 → 글이 게시판에 표시되고, **클릭하면 새
-   브라우저 탭으로 게시글 상세 페이지(post.html)가 열리는지** 확인
-5. board.html에서도 "관리자이신가요?"를 눌러 같은 계정으로 로그인해 보면,
-   글쓰기 시 승인 없이 바로 게시되고 "공지사항 고정" 옵션이 나타나는지 확인
+2. admin.html에서 관리자 계정으로 로그인 → "승인 대기 게시글"에서 승인
+3. board.html에서 글 클릭 → 새 탭으로 post.html 열리는지 확인
+4. media.html에 YouTube 링크를 넣은 글이 보이는지 확인
+
+**교육 신청(캘린더)**
+1. support.html에서 날짜 선택 → 캡차 체크 → 신청
+2. admin.html의 **"예약 현황" 달력**과 **"승인 대기 교육 신청"** 목록에 방금 신청이
+   보이는지 확인 → "확정" 클릭
+3. support.html/about.html 달력에 확정된 날짜가 반영되는지 확인
 
 ## 보안 수준 요약
 
 | 항목 | 이전 방식 | 지금 방식 |
 |---|---|---|
-| 관리자 인증 | 소스코드에 평문 비밀번호 노출 | Supabase Auth 실제 로그인 (비밀번호는 서버에만 저장, 소스에 없음) |
+| 관리자 인증 | 소스코드에 평문 비밀번호 노출 | Supabase Auth 실제 로그인 (비밀번호는 서버에만 저장) |
 | 승인/거절/삭제 권한 | 누구나 비밀번호만 알면 API 직접 호출 가능 | 로그인한 관리자 계정만 가능하도록 DB 레벨(RLS)에서 강제 |
-| 글 등록 스팸 | 제한 없음 | Turnstile 캡차를 서버에서 직접 검증, 실패 시 저장 자체가 차단됨 |
+| 글/신청 스팸 | 제한 없음 | Turnstile 캡차를 서버에서 직접 검증, 실패 시 저장 자체가 차단됨 |
 | 이미지 업로드 남용 | 제한 없음 | 파일당 5MB, 이미지 형식만 허용 |
+| 인프라 리스크 | 개인 Google 계정에 의존 (계정 정지/어뷰징 감지 시 전체 마비) | Supabase 단일 백엔드, Google 계정과 무관 |
 
-**남아있는 한계 한 가지**: 교육 신청(캘린더) 승인 기능은 여전히 예전 방식대로
-공유 비밀번호(Apps Script)를 사용합니다. 이 부분은 별도 시스템(Google Calendar)이라
-이번 작업 범위에 포함하지 않았습니다. 필요하시면 이 부분도 같은 방식으로
-강화해 드릴 수 있어요.
+## 더 이상 필요 없는 파일
+
+아래 파일들은 이제 사용하지 않습니다. 확인 기간을 두고 문제없으면 삭제하셔도 됩니다.
+- `CALENDAR_SETUP_GUIDE.md` (Google Calendar/Apps Script 설정 가이드 — 파일 상단에 "사용 안 함" 표시해 두었습니다)
+- `calendar-booking.gs.txt` (Apps Script 코드)

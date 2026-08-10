@@ -217,10 +217,30 @@ body{background:var(--cream)}
 .admin-empty{font-size:13px;color:var(--muted);padding:32px;text-align:center;background:#fff;border-radius:6px;border:1px dashed rgba(15,28,46,.15)}
 .notice-flag{display:inline-flex;align-items:center;gap:4px;font-size:10px;background:rgba(196,145,58,.12);color:var(--gold);padding:3px 9px;border-radius:10px;margin-left:8px}
 
+/* ── 예약 달력 (관리자용, 크고 명확하게) ── */
+.cal-box{background:#fff;border:1px solid rgba(15,28,46,.1);border-radius:6px;padding:24px;margin-bottom:16px}
+.cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.cal-nav{padding:10px 18px;background:var(--cream);border:1px solid rgba(15,28,46,.12);border-radius:4px;font-size:14px;font-weight:500;color:var(--navy);cursor:pointer}
+.cal-nav:hover{background:#fff;border-color:var(--gold)}
+.cal-month-label{font-family:var(--serif);font-size:22px;font-weight:700;color:var(--navy)}
+.cal-legend{display:flex;flex-wrap:wrap;gap:18px;margin-bottom:18px;font-size:13px;color:var(--muted)}
+.cal-legend span{display:inline-flex;align-items:center;gap:7px}
+.cal-dot{width:14px;height:14px;border-radius:3px;display:inline-block}
+.cal-dot-pending{background:#F4D58D}
+.cal-dot-confirmed{background:#E29B9B}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+.cal-dow{text-align:center;font-size:13px;color:var(--muted);font-weight:500;padding:8px 0}
+.cal-day{min-height:64px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:8px 4px;font-size:16px;font-weight:600;border-radius:5px;color:var(--txt);background:#fff;border:1px solid rgba(15,28,46,.08)}
+.cal-day.cal-empty{border:none;background:transparent}
+.cal-day.cal-pending{background:#F4D58D;color:#6B5417;border-color:transparent}
+.cal-day.cal-confirmed{background:#E29B9B;color:#6B1F1F;border-color:transparent}
+.cal-day-name{font-size:10px;font-weight:400;margin-top:3px;line-height:1.3;text-align:center;word-break:break-all}
+
 @media(max-width:640px){
   .admin-card{grid-template-columns:1fr}
   .admin-card-actions{justify-content:flex-end}
   .admin-body{padding:28px 18px}
+  .cal-day{min-height:44px;font-size:13px}
 }
 
 </style>
@@ -269,6 +289,24 @@ body{background:var(--cream)}
       </div>
       <div id="published-posts-list">
         <p class="admin-empty">불러오는 중...</p>
+      </div>
+    </div>
+
+    <div class="admin-section">
+      <div class="admin-section-title">
+        <h2>예약 현황 (한눈에 보기)</h2>
+      </div>
+      <div class="cal-box">
+        <div class="cal-header">
+          <button type="button" class="cal-nav" onclick="calChangeMonth(-1)">◀ 이전 달</button>
+          <span class="cal-month-label" id="cal-month-label"></span>
+          <button type="button" class="cal-nav" onclick="calChangeMonth(1)">다음 달 ▶</button>
+        </div>
+        <div class="cal-legend">
+          <span><i class="cal-dot cal-dot-pending"></i> 승인 대기중</span>
+          <span><i class="cal-dot cal-dot-confirmed"></i> 예약 확정</span>
+        </div>
+        <div class="cal-grid" id="cal-grid"></div>
       </div>
     </div>
 
@@ -358,13 +396,7 @@ function switchTab(btn, id, groupSel){
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-/* board.html / calendar-booking.gs.txt의 ADMIN_PASSWORD와 반드시 동일한 값으로 설정해 주세요 */
-var ADMIN_PASSWORD = 'Genesis11';
-
-/* Apps Script 웹 앱 URL — 교육 신청(캘린더) 승인에만 사용됩니다. support.html, media.html과 동일한 URL */
-var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwtQ1636H4OAoYyNxq0tjTK2qMGQ1dOHTqfDVFz-45ZoUa9FBQ4McADqTjQWgwRoQYv/exec';
-
-/* 게시글(사진 포함)은 Supabase — board.html과 동일한 값으로 설정해 주세요 */
+/* board.html / support.html과 동일한 값으로 설정해 주세요 (게시글 + 교육 신청 모두 Supabase 사용) */
 var SUPABASE_URL = 'https://cizlnyibyovmhhfljygt.supabase.co';
 var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpemxueWlieW92bWhoZmxqeWd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYzMDI3MDAsImV4cCI6MjEwMTg3ODcwMH0.mE_Pd-Lnn3877UoFp86vJeDE3k818N8wWCDkGS0cUms';
 var sb = (SUPABASE_URL.indexOf('YOUR_SUPABASE') !== 0) ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
@@ -413,12 +445,6 @@ function showDashboard(){
   loadPending();
 }
 
-/* 교육 신청(캘린더) 승인은 여전히 기존 Apps Script 공유 비밀번호를 사용합니다.
-   (게시글 승인은 더 이상 이 값을 쓰지 않습니다) */
-function getAdminPw(){
-  return ADMIN_PASSWORD;
-}
-
 function escapeHtmlAdmin(str){
   if (!str) return '';
   var div = document.createElement('div');
@@ -430,6 +456,7 @@ function loadPending(){
   loadPendingPosts();
   loadPublishedPosts();
   loadPendingBookings();
+  loadCalendarBookings();
 }
 
 function loadPendingPosts(){
@@ -471,23 +498,81 @@ function loadPublishedPosts(){
 }
 
 function loadPendingBookings(){
-  if (SCRIPT_URL.indexOf('YOUR_APPS_SCRIPT') === 0){
-    document.getElementById('pending-bookings-list').innerHTML = '<p class="admin-empty">⚠ SCRIPT_URL이 아직 설정되지 않았습니다.</p>';
+  if (!sb){
+    document.getElementById('pending-bookings-list').innerHTML = '<p class="admin-empty">⚠ SUPABASE_URL이 아직 설정되지 않았습니다.</p>';
     return;
   }
-
-  fetch(SCRIPT_URL + '?action=adminPending&password=' + encodeURIComponent(getAdminPw()))
-    .then(function(res){ return res.json(); })
-    .then(function(data){
-      if (!data.ok){
-        alert('인증 오류: ' + (data.error || '알 수 없는 오류'));
+  sb.from('bookings').select('*').eq('status', 'pending').order('start_date', { ascending: true })
+    .then(function(res){
+      if (res.error){
+        alert('인증 오류: ' + res.error.message);
         return;
       }
-      renderPendingBookings(data.pendingBookings || []);
+      renderPendingBookings(res.data || []);
     })
     .catch(function(){
       document.getElementById('pending-bookings-list').innerHTML = '<p class="admin-empty">불러오기 실패. 네트워크를 확인해 주세요.</p>';
     });
+}
+
+/* ── 예약 달력 (전체 pending + confirmed 표시) ── */
+var calBookings = [];
+var calViewDate = new Date(); calViewDate.setDate(1);
+var CAL_DOW_KO = ['일','월','화','수','목','금','토'];
+
+function calChangeMonth(delta){
+  calViewDate.setMonth(calViewDate.getMonth() + delta);
+  renderCalendarGrid();
+}
+
+function calEntriesForDate(y, m, d){
+  var target = new Date(y, m, d);
+  target.setHours(0,0,0,0);
+  return calBookings.filter(function(b){
+    var s = new Date(b.start_date + 'T00:00:00');
+    var e = new Date(b.end_date + 'T00:00:00');
+    return target >= s && target <= e;
+  });
+}
+
+function renderCalendarGrid(){
+  var grid = document.getElementById('cal-grid');
+  var label = document.getElementById('cal-month-label');
+  if (!grid) return;
+
+  var y = calViewDate.getFullYear();
+  var m = calViewDate.getMonth();
+  label.textContent = y + '년 ' + (m + 1) + '월';
+
+  var html = CAL_DOW_KO.map(function(d){ return '<div class="cal-dow">' + d + '</div>'; }).join('');
+  var firstDow = new Date(y, m, 1).getDay();
+  var daysInMonth = new Date(y, m + 1, 0).getDate();
+
+  for (var i = 0; i < firstDow; i++){
+    html += '<div class="cal-day cal-empty"></div>';
+  }
+  for (var d = 1; d <= daysInMonth; d++){
+    var entries = calEntriesForDate(y, m, d);
+    var status = '';
+    var nameTag = '';
+    if (entries.length){
+      var hasConfirmed = entries.some(function(b){ return b.status === 'confirmed'; });
+      status = hasConfirmed ? ' cal-confirmed' : ' cal-pending';
+      nameTag = '<span class="cal-day-name">' + escapeHtmlAdmin(entries[0].requester_name || '') + '</span>';
+    }
+    html += '<div class="cal-day' + status + '">' + d + nameTag + '</div>';
+  }
+  grid.innerHTML = html;
+}
+
+function loadCalendarBookings(){
+  if (!sb) return;
+  sb.from('bookings').select('start_date,end_date,status,requester_name')
+    .then(function(res){
+      if (!res.error) calBookings = res.data || [];
+      renderCalendarGrid();
+    })
+    .catch(function(){ renderCalendarGrid(); });
 }
 
 function renderPendingPosts(posts){
@@ -579,27 +664,20 @@ function renderPendingBookings(bookings){
   }
 
   listEl.innerHTML = bookings.map(function(b){
-    var date = new Date(b.date);
-    var dateStr = date.toLocaleDateString('ko-KR', { year:'numeric', month:'2-digit', day:'2-digit' });
-    var rangeStr = dateStr;
-    if (b.endDate){
-      var endDateObj = new Date(b.endDate);
-      /* 종일 이벤트는 종료일이 다음날 0시로 저장되므로 하루 빼서 실제 마지막 날짜로 표시 */
-      endDateObj.setDate(endDateObj.getDate() - 1);
-      var endDateStr = endDateObj.toLocaleDateString('ko-KR', { year:'numeric', month:'2-digit', day:'2-digit' });
-      if (endDateStr !== dateStr) rangeStr = dateStr + ' ~ ' + endDateStr;
-    }
-    var desc = (b.description || '').split('\\n').map(escapeHtmlAdmin).join('<br>');
+    var dateStr = b.start_date;
+    var rangeStr = dateStr === b.end_date ? dateStr : (dateStr + ' ~ ' + b.end_date);
+    var contact = [b.email, b.phone].filter(Boolean).map(escapeHtmlAdmin).join(' · ');
+    var note = b.note ? '<p style="line-height:1.9;margin-top:6px">' + escapeHtmlAdmin(b.note) + '</p>' : '';
     return '' +
-    '<div class="admin-card" data-event-id="' + b.eventId + '">' +
+    '<div class="admin-card" data-id="' + b.id + '">' +
       '<div class="admin-card-body">' +
-        '<p class="admin-card-meta">신청 기간: ' + rangeStr + '</p>' +
-        '<p class="admin-card-title">' + escapeHtmlAdmin(b.title.replace('[승인대기] ', '')) + '</p>' +
-        '<p style="line-height:1.9">' + desc + '</p>' +
+        '<p class="admin-card-meta">신청 기간: ' + rangeStr + ' · ' + escapeHtmlAdmin(b.requester_name) + (contact ? ' · ' + contact : '') + '</p>' +
+        '<p class="admin-card-title">' + escapeHtmlAdmin(b.title) + '</p>' +
+        note +
       '</div>' +
       '<div class="admin-card-actions">' +
-        '<button class="btn-approve" onclick="approveBooking(\'' + b.eventId + '\', this)">확정</button>' +
-        '<button class="btn-reject" onclick="rejectBooking(\'' + b.eventId + '\', this)">거절</button>' +
+        '<button class="btn-approve" onclick="approveBooking(\'' + b.id + '\', this)">확정</button>' +
+        '<button class="btn-reject" onclick="rejectBooking(\'' + b.id + '\', this)">거절</button>' +
       '</div>' +
     '</div>';
   }).join('');
@@ -631,33 +709,23 @@ function rejectPost(id, btn){
   .finally(function(){ updateCountsAfterRemoval('posts-count'); });
 }
 
-function approveBooking(eventId, btn){
+function approveBooking(id, btn){
   setCardLoading(btn, true);
-  fetch(SCRIPT_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify({ action: 'approveBooking', eventId: eventId, password: getAdminPw() })
-  })
-  .then(function(res){ return res.json(); })
-  .then(function(data){
-    if (data.ok) btn.closest('.admin-card').remove();
-    else alert('오류: ' + data.error);
+  sb.from('bookings').update({ status: 'confirmed' }).eq('id', id)
+  .then(function(res){
+    if (!res.error){ btn.closest('.admin-card').remove(); loadCalendarBookings(); }
+    else alert('오류: ' + res.error.message);
   })
   .finally(function(){ updateCountsAfterRemoval('bookings-count'); });
 }
 
-function rejectBooking(eventId, btn){
+function rejectBooking(id, btn){
   if (!confirm('이 신청을 거절하시겠습니까? 해당 날짜는 다시 신청 가능해집니다.')) return;
   setCardLoading(btn, true);
-  fetch(SCRIPT_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify({ action: 'rejectBooking', eventId: eventId, password: getAdminPw() })
-  })
-  .then(function(res){ return res.json(); })
-  .then(function(data){
-    if (data.ok) btn.closest('.admin-card').remove();
-    else alert('오류: ' + data.error);
+  sb.from('bookings').delete().eq('id', id)
+  .then(function(res){
+    if (!res.error){ btn.closest('.admin-card').remove(); loadCalendarBookings(); }
+    else alert('오류: ' + res.error.message);
   })
   .finally(function(){ updateCountsAfterRemoval('bookings-count'); });
 }

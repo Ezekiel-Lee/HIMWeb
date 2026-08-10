@@ -163,7 +163,96 @@ create policy "public can read board images"
   using (bucket_id = 'board-images');
 
 -- ═══════════════════════════════════════════════════════════
--- 8) 관리자 계정 등록 (이 스크립트 실행 후 아래 안내에 따라 별도로 진행)
+-- 8) 교육 신청(캘린더 예약) — Google Apps Script를 완전히 대체
+-- ═══════════════════════════════════════════════════════════
+
+create table if not exists bookings (
+  id             uuid primary key default gen_random_uuid(),
+  created_at     timestamptz not null default now(),
+  title          text not null,
+  requester_name text not null,
+  email          text,
+  phone          text,
+  note           text,
+  start_date     date not null,
+  end_date       date not null,
+  status         text not null default 'pending' check (status in ('pending','confirmed'))
+);
+
+alter table bookings enable row level security;
+-- 공개 정책 없음 = 신청 내용(연락처 등)은 관리자만 직접 조회 가능.
+-- 방문자용 달력은 아래 list_booked_dates() 함수로 날짜 상태만 노출합니다.
+
+drop policy if exists "admin can read bookings" on bookings;
+create policy "admin can read bookings" on bookings for select using (am_i_admin());
+
+drop policy if exists "admin can update bookings" on bookings;
+create policy "admin can update bookings" on bookings for update using (am_i_admin());
+
+drop policy if exists "admin can delete bookings" on bookings;
+create policy "admin can delete bookings" on bookings for delete using (am_i_admin());
+
+-- 방문자용 달력 표시 — 이름/연락처 등 개인정보 없이 날짜와 상태만 공개
+create or replace function list_booked_dates()
+returns table(start_date date, end_date date, status text) as $$
+begin
+  return query select b.start_date, b.end_date, b.status from bookings b;
+end;
+$$ language plpgsql security definer stable;
+
+-- 특정 기간이 비어있는지 실시간 확인 (신청 폼에서 사용)
+create or replace function check_availability(p_start_date date, p_end_date date)
+returns boolean as $$
+declare
+  conflict_count int;
+begin
+  select count(*) into conflict_count
+  from bookings
+  where daterange(start_date, end_date, '[]') && daterange(p_start_date, p_end_date, '[]');
+  return conflict_count = 0;
+end;
+$$ language plpgsql security definer stable;
+
+-- 방문자의 실제 신청 접수 (캡차 통과 + 기간 중복 확인 필수)
+create or replace function request_booking(
+  p_title text, p_requester_name text, p_email text, p_phone text, p_note text,
+  p_start_date date, p_end_date date, p_turnstile_token text
+)
+returns bookings as $$
+declare
+  result bookings;
+  conflict_count int;
+begin
+  if p_end_date < p_start_date then
+    raise exception '종료일은 시작일과 같거나 이후여야 합니다';
+  end if;
+  if p_start_date < current_date then
+    raise exception '과거 날짜는 신청할 수 없습니다';
+  end if;
+  if trim(coalesce(p_requester_name,'')) = '' then
+    raise exception '이름을 입력해 주세요';
+  end if;
+  if not verify_turnstile(p_turnstile_token) then
+    raise exception '자동 등록 방지 확인에 실패했습니다. 새로고침 후 다시 시도해 주세요.';
+  end if;
+
+  select count(*) into conflict_count
+  from bookings
+  where daterange(start_date, end_date, '[]') && daterange(p_start_date, p_end_date, '[]');
+
+  if conflict_count > 0 then
+    raise exception '선택하신 기간 중 이미 예약된 날짜가 포함되어 있습니다';
+  end if;
+
+  insert into bookings (title, requester_name, email, phone, note, start_date, end_date, status)
+  values (p_title, p_requester_name, p_email, p_phone, p_note, p_start_date, p_end_date, 'pending')
+  returning * into result;
+  return result;
+end;
+$$ language plpgsql security definer;
+
+-- ═══════════════════════════════════════════════════════════
+-- 9) 관리자 계정 등록 (이 스크립트 실행 후 아래 안내에 따라 별도로 진행)
 --
 -- 1. Supabase 대시보드 → Authentication → Users → "Add user"에서
 --    관리자 이메일/비밀번호로 계정을 만듭니다. (Auto Confirm User 체크)

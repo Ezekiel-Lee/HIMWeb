@@ -1,4 +1,9 @@
-# Google Calendar 연동 설정 가이드
+> ⚠ **사용 안 함 (2026-08 기준)** — 교육 신청(캘린더) 기능이 Supabase로
+> 완전히 이전되어 이 가이드와 Google Apps Script/Calendar 연동은 더 이상
+> 필요하지 않습니다. 최신 설정은 `SUPABASE_SETUP_GUIDE.md`를 참고하세요.
+> 이 파일과 `calendar-booking.gs.txt`는 참고용으로만 남겨두었으며 삭제해도 됩니다.
+
+# Google Calendar 연동 설정 가이드 (구버전, 사용 안 함)
 
 ## 1단계 — 캘린더 생성
 
