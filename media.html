@@ -352,6 +352,7 @@ footer{background:#0D1A27;padding:48px 40px}
   </div>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
 /* ═══════════════════════════════════════════════════════
    JD MEDIA MISSION — SHARED SCRIPT
@@ -419,11 +420,15 @@ function switchTab(btn, id, groupSel){
 }
 
 /* ═══════════════════════════════════════════════════════
-   MEDIA — 게시판 YouTube 링크 자동 표시 (oEmbed, API 키 불필요)
+   MEDIA — 게시판 YouTube 링크 자동 표시 (Supabase, oEmbed로 제목만 보완)
    ═══════════════════════════════════════════════════════ */
 
-/* board.html과 동일한 Apps Script 웹 앱 URL을 넣어주세요 */
-var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwtQ1636H4OAoYyNxq0tjTK2qMGQ1dOHTqfDVFz-45ZoUa9FBQ4McADqTjQWgwRoQYv/exec';
+/* board.html / admin.html과 동일한 값으로 설정해 주세요 */
+var SUPABASE_URL = 'https://cizlnyibyovmhhfljygt.supabase.co';
+var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpemxueWlieW92bWhoZmxqeWd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYzMDI3MDAsImV4cCI6MjEwMTg3ODcwMH0.mE_Pd-Lnn3877UoFp86vJeDE3k818N8wWCDkGS0cUms';
+var sb = (SUPABASE_URL.indexOf('YOUR_SUPABASE') !== 0)
+  ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+  : null;
 
 function extractYoutubeId(url){
   if (!url) return null;
@@ -435,18 +440,16 @@ function loadCommunityVideos(){
   var grid = document.getElementById('community-yt-grid');
   if (!grid) return;
 
-  if (SCRIPT_URL.indexOf('YOUR_APPS_SCRIPT') === 0){
-    grid.innerHTML = '<p style="font-size:13px;color:var(--muted)">백엔드가 아직 연결되지 않았습니다. board.html과 media.html의 SCRIPT_URL을 설정해 주세요.</p>';
+  if (!sb){
+    grid.innerHTML = '<p style="font-size:13px;color:var(--muted)">백엔드가 아직 연결되지 않았습니다. media.html의 SUPABASE_URL을 설정해 주세요.</p>';
     return;
   }
 
-  fetch(SCRIPT_URL)
-    .then(function(res){ return res.json(); })
-    .then(function(data){
-      if (!data.ok || !data.posts) throw new Error('no data');
-
-      var videoPosts = data.posts.filter(function(p){
-        return extractYoutubeId(p.youtubeUrl);
+  sb.from('posts').select('*').eq('status', 'approved').not('youtube_url', 'is', null).order('created_at', { ascending: false })
+    .then(function(res){
+      if (res.error) throw res.error;
+      var videoPosts = (res.data || []).filter(function(p){
+        return extractYoutubeId(p.youtube_url);
       });
 
       if (videoPosts.length === 0){
@@ -456,7 +459,7 @@ function loadCommunityVideos(){
 
       grid.innerHTML = '';
       videoPosts.forEach(function(post){
-        var ytId = extractYoutubeId(post.youtubeUrl);
+        var ytId = extractYoutubeId(post.youtube_url);
         var card = document.createElement('div');
         card.className = 'ytc';
         card.style.cssText = 'display:block;background:#fff;overflow:hidden;border-radius:4px;cursor:pointer';

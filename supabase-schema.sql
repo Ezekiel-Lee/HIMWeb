@@ -65,11 +65,16 @@ create trigger trg_force_pending
 -- 4) RLS 활성화
 alter table posts enable row level security;
 
+-- ⚠ 정책 안에서 admin_users를 "직접" 서브쿼리로 참조하면 안 됩니다.
+-- admin_users는 RLS가 켜져 있고 일반 로그인 사용자에게 조회 권한이 없어서,
+-- 정책 평가 시점에 그 서브쿼리가 항상 빈 결과(= false)로 처리되어 버립니다.
+-- 반드시 SECURITY DEFINER 함수인 am_i_admin()을 통해서 확인해야
+-- 권한 우회가 정상적으로 적용됩니다.
 drop policy if exists "public can read approved posts" on posts;
 drop policy if exists "read approved or admin sees all" on posts;
 create policy "read approved or admin sees all"
   on posts for select
-  using (status = 'approved' or exists (select 1 from admin_users where user_id = auth.uid()));
+  using (status = 'approved' or am_i_admin());
 
 -- 직접 테이블 INSERT는 관리자만 가능 (관리자가 board.html에서 즉시 게시할 때 사용).
 -- 일반 방문자는 아래 submit_post() 함수를 통해서만 글을 등록할 수 있습니다.
@@ -77,17 +82,17 @@ drop policy if exists "public can insert posts" on posts;
 drop policy if exists "admin can insert posts" on posts;
 create policy "admin can insert posts"
   on posts for insert
-  with check (exists (select 1 from admin_users where user_id = auth.uid()));
+  with check (am_i_admin());
 
 drop policy if exists "admin can update posts" on posts;
 create policy "admin can update posts"
   on posts for update
-  using (exists (select 1 from admin_users where user_id = auth.uid()));
+  using (am_i_admin());
 
 drop policy if exists "admin can delete posts" on posts;
 create policy "admin can delete posts"
   on posts for delete
-  using (exists (select 1 from admin_users where user_id = auth.uid()));
+  using (am_i_admin());
 
 -- 5) Cloudflare Turnstile(캡차) 서버 검증
 --    ⚠ 아래 secret 값을 Cloudflare Turnstile 대시보드에서 발급받은

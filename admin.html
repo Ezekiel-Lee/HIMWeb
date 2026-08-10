@@ -264,6 +264,16 @@ body{background:var(--cream)}
 
     <div class="admin-section">
       <div class="admin-section-title">
+        <h2>게시된 글 (삭제 가능)</h2>
+        <span class="admin-count" id="published-posts-count">0</span>
+      </div>
+      <div id="published-posts-list">
+        <p class="admin-empty">불러오는 중...</p>
+      </div>
+    </div>
+
+    <div class="admin-section">
+      <div class="admin-section-title">
         <h2>승인 대기 교육 신청</h2>
         <span class="admin-count" id="bookings-count">0</span>
       </div>
@@ -418,6 +428,7 @@ function escapeHtmlAdmin(str){
 
 function loadPending(){
   loadPendingPosts();
+  loadPublishedPosts();
   loadPendingBookings();
 }
 
@@ -437,6 +448,25 @@ function loadPendingPosts(){
     })
     .catch(function(){
       document.getElementById('pending-posts-list').innerHTML = '<p class="admin-empty">불러오기 실패. 네트워크를 확인해 주세요.</p>';
+    });
+}
+
+function loadPublishedPosts(){
+  if (!sb){
+    document.getElementById('published-posts-list').innerHTML = '<p class="admin-empty">⚠ SUPABASE_URL이 아직 설정되지 않았습니다.</p>';
+    return;
+  }
+  sb.from('posts').select('*').eq('status', 'approved').order('created_at', { ascending: false })
+    .then(function(res){
+      if (res.error){
+        alert('인증 오류: ' + res.error.message);
+        doLogout();
+        return;
+      }
+      renderPublishedPosts(res.data || []);
+    })
+    .catch(function(){
+      document.getElementById('published-posts-list').innerHTML = '<p class="admin-empty">불러오기 실패. 네트워크를 확인해 주세요.</p>';
     });
 }
 
@@ -492,6 +522,51 @@ function renderPendingPosts(posts){
       '</div>' +
     '</div>';
   }).join('');
+}
+
+function renderPublishedPosts(posts){
+  document.getElementById('published-posts-count').textContent = posts.length;
+  var listEl = document.getElementById('published-posts-list');
+
+  if (posts.length === 0){
+    listEl.innerHTML = '<p class="admin-empty">게시된 글이 없습니다.</p>';
+    return;
+  }
+
+  listEl.innerHTML = posts.map(function(post){
+    var date = new Date(post.created_at);
+    var dateStr = date.toLocaleString('ko-KR', { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' });
+    var images = (post.image_urls && post.image_urls.length)
+      ? '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">' +
+          post.image_urls.map(function(u){ return '<img src="' + u + '" style="width:64px;height:64px;object-fit:cover;border-radius:4px">'; }).join('') +
+        '</div>'
+      : '';
+    var noticeFlag = post.is_notice ? '<span class="notice-flag">📌 공지</span>' : '';
+    return '' +
+    '<div class="admin-card" data-id="' + post.id + '">' +
+      '<div class="admin-card-body">' +
+        '<p class="admin-card-meta">' + escapeHtmlAdmin(post.category || '일반') + ' · ' + dateStr + ' · ' + escapeHtmlAdmin(post.name || '익명') + noticeFlag + '</p>' +
+        '<p class="admin-card-title">' + escapeHtmlAdmin(post.title) + '</p>' +
+        '<p>' + escapeHtmlAdmin(post.content) + '</p>' +
+        (post.youtube_url ? '<p style="color:var(--gold);margin-top:6px">▶ ' + escapeHtmlAdmin(post.youtube_url) + '</p>' : '') +
+        images +
+      '</div>' +
+      '<div class="admin-card-actions">' +
+        '<button class="btn-reject" onclick="deletePublishedPost(\'' + post.id + '\', this)">삭제</button>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function deletePublishedPost(id, btn){
+  if (!confirm('이미 게시된 글입니다. 정말 삭제하시겠습니까?')) return;
+  setCardLoading(btn, true);
+  sb.from('posts').delete().eq('id', id)
+  .then(function(res){
+    if (!res.error) btn.closest('.admin-card').remove();
+    else alert('오류: ' + res.error.message);
+  })
+  .finally(function(){ updateCountsAfterRemoval('published-posts-count'); });
 }
 
 function renderPendingBookings(bookings){
@@ -587,15 +662,22 @@ function rejectBooking(eventId, btn){
   .finally(function(){ updateCountsAfterRemoval('bookings-count'); });
 }
 
+var COUNT_LIST_MAP = {
+  'posts-count': { listId: 'pending-posts-list', emptyText: '대기 중인 게시글이 없습니다.' },
+  'published-posts-count': { listId: 'published-posts-list', emptyText: '게시된 글이 없습니다.' },
+  'bookings-count': { listId: 'pending-bookings-list', emptyText: '대기 중인 교육 신청이 없습니다.' }
+};
+
 function updateCountsAfterRemoval(countId){
   var section = document.getElementById(countId).closest('.admin-section');
   var remaining = section.querySelectorAll('.admin-card').length;
   document.getElementById(countId).textContent = remaining;
   if (remaining === 0){
-    var listId = countId === 'posts-count' ? 'pending-posts-list' : 'pending-bookings-list';
+    var info = COUNT_LIST_MAP[countId];
+    if (!info) return;
     setTimeout(function(){
-      if (document.querySelectorAll('#' + listId + ' .admin-card').length === 0){
-        document.getElementById(listId).innerHTML = '<p class="admin-empty">대기 중인 항목이 없습니다.</p>';
+      if (document.querySelectorAll('#' + info.listId + ' .admin-card').length === 0){
+        document.getElementById(info.listId).innerHTML = '<p class="admin-empty">' + info.emptyText + '</p>';
       }
     }, 350);
   }
