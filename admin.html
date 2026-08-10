@@ -232,10 +232,11 @@ body{background:var(--cream)}
   <div class="gate-box">
     <img src="logo_him_allcolor.svg" alt="HiM logo">
     <h1>관리자 로그인</h1>
-    <p>비밀번호를 입력해 주세요</p>
-    <input type="password" id="gate-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+    <p>이메일과 비밀번호를 입력해 주세요</p>
+    <input type="email" id="gate-email" placeholder="admin@example.com" autocomplete="username">
+    <input type="password" id="gate-password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
     <button onclick="doLogin()">입장하기</button>
-    <p class="gate-error" id="gate-error">비밀번호가 올바르지 않습니다.</p>
+    <p class="gate-error" id="gate-error">로그인에 실패했습니다.</p>
   </div>
 </div>
 
@@ -354,22 +355,43 @@ var ADMIN_PASSWORD = 'Genesis11';
 var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwtQ1636H4OAoYyNxq0tjTK2qMGQ1dOHTqfDVFz-45ZoUa9FBQ4McADqTjQWgwRoQYv/exec';
 
 /* 게시글(사진 포함)은 Supabase — board.html과 동일한 값으로 설정해 주세요 */
-var SUPABASE_URL = 'YOUR_SUPABASE_PROJECT_URL';
-var SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+var SUPABASE_URL = 'https://cizlnyibyovmhhfljygt.supabase.co';
+var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpemxueWlieW92bWhoZmxqeWd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYzMDI3MDAsImV4cCI6MjEwMTg3ODcwMH0.mE_Pd-Lnn3877UoFp86vJeDE3k818N8wWCDkGS0cUms';
 var sb = (SUPABASE_URL.indexOf('YOUR_SUPABASE') !== 0) ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
 function doLogin(){
+  var email = document.getElementById('gate-email').value;
   var pw = document.getElementById('gate-password').value;
-  if (pw === ADMIN_PASSWORD){
-    sessionStorage.setItem('jd_admin_pw', pw);
-    showDashboard();
-  } else {
-    document.getElementById('gate-error').style.display = 'block';
+  var errEl = document.getElementById('gate-error');
+  errEl.style.display = 'none';
+
+  if (!sb){
+    errEl.style.display = 'block';
+    errEl.textContent = '⚠ SUPABASE_URL이 아직 설정되지 않았습니다.';
+    return;
   }
+
+  sb.auth.signInWithPassword({ email: email, password: pw })
+    .then(function(res){
+      if (res.error){
+        errEl.textContent = '로그인에 실패했습니다.';
+        errEl.style.display = 'block';
+        return;
+      }
+      return sb.rpc('am_i_admin').then(function(r){
+        if (!r.data){
+          errEl.textContent = '관리자 계정이 아닙니다.';
+          errEl.style.display = 'block';
+          sb.auth.signOut();
+          return;
+        }
+        showDashboard();
+      });
+    });
 }
 
 function doLogout(){
-  sessionStorage.removeItem('jd_admin_pw');
+  if (sb) sb.auth.signOut();
   document.getElementById('admin-dashboard').style.display = 'none';
   document.getElementById('admin-gate').style.display = 'flex';
   document.getElementById('gate-password').value = '';
@@ -381,8 +403,10 @@ function showDashboard(){
   loadPending();
 }
 
+/* 교육 신청(캘린더) 승인은 여전히 기존 Apps Script 공유 비밀번호를 사용합니다.
+   (게시글 승인은 더 이상 이 값을 쓰지 않습니다) */
 function getAdminPw(){
-  return sessionStorage.getItem('jd_admin_pw') || '';
+  return ADMIN_PASSWORD;
 }
 
 function escapeHtmlAdmin(str){
@@ -402,7 +426,7 @@ function loadPendingPosts(){
     document.getElementById('pending-posts-list').innerHTML = '<p class="admin-empty">⚠ SUPABASE_URL이 아직 설정되지 않았습니다.</p>';
     return;
   }
-  sb.rpc('admin_list_pending', { pw: getAdminPw() })
+  sb.from('posts').select('*').eq('status', 'pending').order('created_at', { ascending: false })
     .then(function(res){
       if (res.error){
         alert('인증 오류: ' + res.error.message);
@@ -513,7 +537,7 @@ function setCardLoading(btn, loading){
 
 function approvePost(id, btn){
   setCardLoading(btn, true);
-  sb.rpc('admin_approve_post', { post_id: id, pw: getAdminPw() })
+  sb.from('posts').update({ status: 'approved' }).eq('id', id)
   .then(function(res){
     if (!res.error) btn.closest('.admin-card').remove();
     else alert('오류: ' + res.error.message);
@@ -524,7 +548,7 @@ function approvePost(id, btn){
 function rejectPost(id, btn){
   if (!confirm('이 게시글을 삭제하시겠습니까?')) return;
   setCardLoading(btn, true);
-  sb.rpc('admin_reject_post', { post_id: id, pw: getAdminPw() })
+  sb.from('posts').delete().eq('id', id)
   .then(function(res){
     if (!res.error) btn.closest('.admin-card').remove();
     else alert('오류: ' + res.error.message);
@@ -577,11 +601,16 @@ function updateCountsAfterRemoval(countId){
   }
 }
 
-/* 세션이 남아있으면 자동 로그인 상태 유지 */
+/* Supabase 로그인 세션이 남아있으면 자동으로 대시보드로 이동 */
 (function(){
-  if (getAdminPw() === ADMIN_PASSWORD){
-    showDashboard();
-  }
+  if (!sb) return;
+  sb.auth.getSession().then(function(res){
+    var session = res.data && res.data.session;
+    if (!session) return;
+    sb.rpc('am_i_admin').then(function(r){
+      if (r.data) showDashboard();
+    });
+  });
 })();
 </script>
 </body>

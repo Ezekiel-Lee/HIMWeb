@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Noto+Sans+KR:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 <style>
 /* ═══════════════════════════════════════════════════════
    JD MEDIA MISSION — SHARED STYLES
@@ -285,9 +286,15 @@ footer{background:#0D1A27;padding:48px 40px}
       <h3 style="font-family:var(--serif);font-size:22px;font-weight:700;color:var(--navy)"><span class="ko">새 글 작성</span><span class="en">New Post</span></h3>
       <button onclick="closePostModal()" style="background:none;border:none;font-size:28px;color:var(--muted);line-height:1;cursor:pointer">×</button>
     </div>
-    <p id="admin-toggle-link" onclick="promptAdminLogin()" style="font-size:11px;color:var(--muted);cursor:pointer;margin-bottom:28px;text-decoration:underline;display:inline-block">
+    <p id="admin-toggle-link" onclick="toggleAdminLoginForm()" style="font-size:11px;color:var(--muted);cursor:pointer;margin-bottom:28px;text-decoration:underline;display:inline-block">
       <span class="ko">관리자이신가요?</span><span class="en">Admin login</span>
     </p>
+    <div id="admin-login-form" style="display:none;margin-bottom:28px;padding:16px;background:rgba(15,28,46,.04);border-radius:4px">
+      <input type="email" id="admin-email" placeholder="관리자 이메일" autocomplete="username" style="width:100%;margin-bottom:8px;padding:9px 12px;border:1px solid rgba(15,28,46,.15);border-radius:3px;font-size:13px;font-family:var(--sans)">
+      <input type="password" id="admin-pw" placeholder="비밀번호" autocomplete="current-password" onkeydown="if(event.key==='Enter')doAdminLogin()" style="width:100%;margin-bottom:10px;padding:9px 12px;border:1px solid rgba(15,28,46,.15);border-radius:3px;font-size:13px;font-family:var(--sans)">
+      <button type="button" onclick="doAdminLogin()" style="width:100%;padding:9px;background:var(--navy);color:#fff;border:none;border-radius:3px;font-size:12px;letter-spacing:.06em;cursor:pointer">로그인</button>
+      <p id="admin-login-error" style="display:none;font-size:11px;color:#D85A30;margin-top:8px"></p>
+    </div>
     <p id="admin-badge" style="display:none;font-size:11px;color:var(--gold);margin-bottom:28px;letter-spacing:.04em">
       ✓ <span class="ko">관리자 모드로 글을 작성합니다</span><span class="en">Writing as admin</span>
       <span onclick="adminLogout()" style="cursor:pointer;text-decoration:underline;margin-left:8px;color:var(--muted)"><span class="ko">로그아웃</span><span class="en">Logout</span></span>
@@ -323,6 +330,11 @@ footer{background:#0D1A27;padding:48px 40px}
         <label style="display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:6px"><span class="ko">사진 첨부 (선택, 여러 장 가능)</span><span class="en">Photos (optional, multiple allowed)</span></label>
         <input type="file" id="p-images" accept="image/*" multiple style="width:100%;padding:9px 0;font-size:13px;font-family:var(--sans)">
         <p id="p-images-msg" style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.6"></p>
+      </div>
+
+      <div id="turnstile-row" style="margin-bottom:16px">
+        <div id="turnstile-widget"></div>
+        <p id="turnstile-msg" style="display:none;font-size:11px;color:var(--muted)">⚠ CAPTCHA가 아직 설정되지 않았습니다.</p>
       </div>
 
       <div id="admin-notice-row" style="display:none;margin-bottom:24px;padding:16px;background:rgba(196,145,58,.08);border:1px solid rgba(196,145,58,.25);border-radius:4px">
@@ -443,48 +455,103 @@ function switchTab(btn, id, groupSel){
    ═══════════════════════════════════════════════════════ */
 
 /* Supabase 프로젝트 설정에서 받은 Project URL과 anon public key로 교체해 주세요 */
-var SUPABASE_URL = 'YOUR_SUPABASE_PROJECT_URL';
-var SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+var SUPABASE_URL = 'https://cizlnyibyovmhhfljygt.supabase.co';
+var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNpemxueWlieW92bWhoZmxqeWd0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYzMDI3MDAsImV4cCI6MjEwMTg3ODcwMH0.mE_Pd-Lnn3877UoFp86vJeDE3k818N8wWCDkGS0cUms';
 
 var sb = (SUPABASE_URL.indexOf('YOUR_SUPABASE') !== 0)
   ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
   : null;
 
-/* 어드민 비밀번호 — 운영자가 직접 원하는 값으로 교체하고, Supabase SQL의
-   admin_check_password 함수 안의 값도 반드시 동일하게 맞춰주세요 */
-var ADMIN_PASSWORD = 'Genesis11';
+/* Cloudflare Turnstile — 대시보드에서 발급받은 Site Key로 교체해 주세요 */
+var TURNSTILE_SITE_KEY = '0x4AAAAAAELj8zeu0wJwVwho';
+var turnstileWidgetId = null;
 
-function isAdmin(){
-  return sessionStorage.getItem('jd_admin') === 'true';
+function renderTurnstile(){
+  if (typeof turnstile === 'undefined'){ setTimeout(renderTurnstile, 300); return; }
+  if (TURNSTILE_SITE_KEY.indexOf('YOUR_TURNSTILE') === 0){
+    var msg = document.getElementById('turnstile-msg');
+    if (msg) msg.style.display = 'block';
+    return;
+  }
+  turnstileWidgetId = turnstile.render('#turnstile-widget', { sitekey: TURNSTILE_SITE_KEY });
 }
 
-function promptAdminLogin(){
-  var pw = prompt(document.body.classList.contains('en') ? 'Admin password:' : '관리자 비밀번호를 입력하세요:');
-  if (pw === null) return;
-  if (pw === ADMIN_PASSWORD){
-    sessionStorage.setItem('jd_admin', 'true');
-    updateAdminUI();
-  } else {
-    alert(document.body.classList.contains('en') ? 'Incorrect password.' : '비밀번호가 올바르지 않습니다.');
+/* ── 관리자 로그인 (Supabase Auth 실제 계정) ── */
+var isAdminUser = false;
+
+function isAdmin(){
+  return isAdminUser;
+}
+
+function refreshAdminState(){
+  if (!sb) return Promise.resolve(false);
+  return sb.auth.getSession().then(function(sessionRes){
+    var session = sessionRes.data && sessionRes.data.session;
+    if (!session){ isAdminUser = false; updateAdminUI(); return false; }
+    return sb.rpc('am_i_admin').then(function(res){
+      isAdminUser = !!(res.data);
+      updateAdminUI();
+      return isAdminUser;
+    });
+  });
+}
+
+function toggleAdminLoginForm(){
+  var form = document.getElementById('admin-login-form');
+  if (!form) return;
+  form.style.display = (form.style.display === 'block') ? 'none' : 'block';
+}
+
+function doAdminLogin(){
+  var email = document.getElementById('admin-email').value;
+  var pw = document.getElementById('admin-pw').value;
+  var errEl = document.getElementById('admin-login-error');
+  errEl.style.display = 'none';
+  if (!sb){
+    errEl.style.display = 'block';
+    errEl.textContent = '⚠ SUPABASE_URL이 아직 설정되지 않았습니다.';
+    return;
   }
+  sb.auth.signInWithPassword({ email: email, password: pw })
+    .then(function(res){
+      if (res.error){
+        errEl.style.display = 'block';
+        errEl.textContent = document.body.classList.contains('en') ? 'Login failed.' : '로그인에 실패했습니다.';
+        return;
+      }
+      return refreshAdminState().then(function(admin){
+        if (!admin){
+          errEl.style.display = 'block';
+          errEl.textContent = document.body.classList.contains('en') ? 'This account is not an admin.' : '관리자 계정이 아닙니다.';
+          sb.auth.signOut();
+        } else {
+          document.getElementById('admin-login-form').style.display = 'none';
+        }
+      });
+    });
 }
 
 function adminLogout(){
-  sessionStorage.removeItem('jd_admin');
+  if (sb) sb.auth.signOut();
+  isAdminUser = false;
   updateAdminUI();
 }
 
 function updateAdminUI(){
   var admin = isAdmin();
   var toggleLink = document.getElementById('admin-toggle-link');
+  var loginForm = document.getElementById('admin-login-form');
   var badge = document.getElementById('admin-badge');
   var noticeRow = document.getElementById('admin-notice-row');
   var approvalNote = document.getElementById('approval-note');
+  var turnstileRow = document.getElementById('turnstile-row');
 
   if (toggleLink) toggleLink.style.display = admin ? 'none' : 'inline-block';
+  if (loginForm && admin) loginForm.style.display = 'none';
   if (badge) badge.style.display = admin ? 'block' : 'none';
   if (noticeRow) noticeRow.style.display = admin ? 'block' : 'none';
   if (approvalNote) approvalNote.style.display = admin ? 'none' : 'block';
+  if (turnstileRow) turnstileRow.style.display = admin ? 'none' : 'block';
 }
 
 function openPostModal(){
@@ -543,14 +610,19 @@ function submitPost(e){
   uploadPostImages(fileInput.files)
     .then(function(imageUrls){
       if (admin){
-        return sb.rpc('admin_create_post', {
-          p_name: name, p_category: category, p_title: title, p_content: content,
-          p_youtube_url: youtubeUrl || null, p_image_urls: imageUrls, p_is_notice: isNotice, pw: ADMIN_PASSWORD
+        return sb.from('posts').insert({
+          name: name, category: category, title: title, content: content,
+          youtube_url: youtubeUrl || null, image_urls: imageUrls,
+          is_notice: isNotice, status: 'approved'
         });
       }
-      return sb.from('posts').insert({
-        name: name, category: category, title: title, content: content,
-        youtube_url: youtubeUrl || null, image_urls: imageUrls
+      var token = (turnstileWidgetId !== null && typeof turnstile !== 'undefined') ? turnstile.getResponse(turnstileWidgetId) : '';
+      if (!token){
+        return Promise.resolve({ error: { message: document.body.classList.contains('en') ? 'Please complete the CAPTCHA.' : 'CAPTCHA를 완료해 주세요.' } });
+      }
+      return sb.rpc('submit_post', {
+        p_name: name, p_category: category, p_title: title, p_content: content,
+        p_youtube_url: youtubeUrl || null, p_image_urls: imageUrls, p_turnstile_token: token
       });
     })
     .then(function(res){
@@ -561,11 +633,13 @@ function submitPost(e){
         : (admin ? '✓ 게시글이 등록되었습니다.' : '✓ 등록되었습니다. 운영자 승인 후 게시판에 표시됩니다.');
       document.getElementById('post-form').reset();
       if (imgMsg) imgMsg.textContent = '';
+      if (turnstileWidgetId !== null && typeof turnstile !== 'undefined') turnstile.reset(turnstileWidgetId);
       setTimeout(function(){ closePostModal(); loadUserPosts(); }, 1800);
     })
     .catch(function(err){
       msg.style.display = 'block';
       msg.textContent = '오류: ' + (err && err.message ? err.message : '전송에 실패했습니다. 네트워크를 확인해 주세요.');
+      if (turnstileWidgetId !== null && typeof turnstile !== 'undefined') turnstile.reset(turnstileWidgetId);
     })
     .finally(function(){
       btn.disabled = false;
@@ -641,7 +715,11 @@ function escapeHtml(str){
   return div.innerHTML.replace(/\n/g, '<br>');
 }
 
-document.addEventListener('DOMContentLoaded', loadUserPosts);
+document.addEventListener('DOMContentLoaded', function(){
+  loadUserPosts();
+  refreshAdminState();
+  renderTurnstile();
+});
 
 </script>
 </body>

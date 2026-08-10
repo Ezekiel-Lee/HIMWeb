@@ -47,14 +47,19 @@ function doPost(e) {
 }
 
 function doGet(e) {
-  const action = e.parameter.action;
+  try {
+    const action = e.parameter.action;
 
-  if (action === 'checkAvailability') return handleCheckAvailability(e.parameter.date);
-  if (action === 'listEvents')        return handleListEvents();
-  if (action === 'adminPending')      return handleAdminPending(e.parameter.password);
+    if (action === 'checkAvailability') return handleCheckAvailability(e.parameter.date);
+    if (action === 'listEvents')        return handleListEvents();
+    if (action === 'adminPending')      return handleAdminPending(e.parameter.password);
 
-  /* action 없음 = 승인된 게시글 목록 (공개) */
-  return handleListPosts();
+    /* action 없음 = 승인된 게시글 목록 (공개) */
+    return handleListPosts();
+
+  } catch (err) {
+    return jsonOut({ ok: false, error: err.message });
+  }
 }
 
 function jsonOut(obj) {
