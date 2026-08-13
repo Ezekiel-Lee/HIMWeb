@@ -123,10 +123,27 @@ function extractYoutubeId(url){
   return m ? m[1] : null;
 }
 
-function extractDriveFolderId(url){
+/* 폴더, 문서, 스프레드시트, 프레젠테이션, 단일 파일(PDF 등) 링크를 모두 인식해서
+   각 형식에 맞는 임베드 URL을 만들어줍니다 */
+function buildDriveEmbedUrl(url){
   if (!url) return null;
-  var m = url.match(/folders\/([a-zA-Z0-9_-]+)/);
-  return m ? m[1] : null;
+  var m;
+  if ((m = url.match(/drive\.google\.com\/drive(?:\/u\/\d+)?\/folders\/([a-zA-Z0-9_-]+)/))){
+    return 'https://drive.google.com/embeddedfolderview?id=' + m[1] + '#grid';
+  }
+  if ((m = url.match(/docs\.google\.com\/document\/d\/([a-zA-Z0-9_-]+)/))){
+    return 'https://docs.google.com/document/d/' + m[1] + '/preview';
+  }
+  if ((m = url.match(/docs\.google\.com\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/))){
+    return 'https://docs.google.com/spreadsheets/d/' + m[1] + '/preview';
+  }
+  if ((m = url.match(/docs\.google\.com\/presentation\/d\/([a-zA-Z0-9_-]+)/))){
+    return 'https://docs.google.com/presentation/d/' + m[1] + '/preview';
+  }
+  if ((m = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/))){
+    return 'https://drive.google.com/file/d/' + m[1] + '/preview';
+  }
+  return null;
 }
 
 function showState(text){
@@ -167,11 +184,11 @@ function renderPost(post){
     }).join('');
   }
 
-  var driveFolderId = extractDriveFolderId(post.drive_folder_url);
-  if (driveFolderId){
+  var driveEmbedUrl = buildDriveEmbedUrl(post.drive_folder_url);
+  if (driveEmbedUrl){
     var driveWrap = document.getElementById('p-drive-wrap');
     driveWrap.style.display = 'block';
-    document.getElementById('p-drive-frame').src = 'https://drive.google.com/embeddedfolderview?id=' + driveFolderId + '#grid';
+    document.getElementById('p-drive-frame').src = driveEmbedUrl;
   }
 }
 
