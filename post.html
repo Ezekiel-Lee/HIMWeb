@@ -45,6 +45,11 @@ img{display:block;max-width:100%}
 .pyoutube{position:relative;width:100%;aspect-ratio:16/9;border-radius:6px;overflow:hidden;margin-bottom:36px;background:#000}
 .pyoutube iframe{position:absolute;inset:0;width:100%;height:100%;border:none}
 
+.pdrive{margin-bottom:36px}
+.pdrive-label{font-size:12px;font-weight:600;color:var(--navy);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.pdrive-frame{width:100%;height:480px;border:1px solid rgba(15,28,46,.12);border-radius:6px;overflow:hidden}
+.pdrive-frame iframe{width:100%;height:100%;border:none}
+
 #pstate{padding:120px 24px;text-align:center;color:var(--muted);font-size:14px}
 
 /* Lightbox for full-size photo view */
@@ -89,6 +94,11 @@ footer{background:#0D1A27;padding:40px 32px;margin-top:60px}
 
   <div class="pimages" id="p-images" style="display:none"></div>
 
+  <div class="pdrive" id="p-drive-wrap" style="display:none">
+    <p class="pdrive-label">📁 <span id="p-drive-label-text">첨부 자료 (Google Drive)</span></p>
+    <div class="pdrive-frame"><iframe id="p-drive-frame" src="" allowfullscreen></iframe></div>
+  </div>
+
   <p class="pcontent" id="p-content"></p>
 </div>
 
@@ -110,6 +120,12 @@ var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYm
 function extractYoutubeId(url){
   if (!url) return null;
   var m = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+  return m ? m[1] : null;
+}
+
+function extractDriveFolderId(url){
+  if (!url) return null;
+  var m = url.match(/folders\/([a-zA-Z0-9_-]+)/);
   return m ? m[1] : null;
 }
 
@@ -149,6 +165,13 @@ function renderPost(post){
     imgWrap.innerHTML = post.image_urls.map(function(url){
       return '<img src="' + url + '" alt="" onclick="openLightbox(\'' + url + '\')">';
     }).join('');
+  }
+
+  var driveFolderId = extractDriveFolderId(post.drive_folder_url);
+  if (driveFolderId){
+    var driveWrap = document.getElementById('p-drive-wrap');
+    driveWrap.style.display = 'block';
+    document.getElementById('p-drive-frame').src = 'https://drive.google.com/embeddedfolderview?id=' + driveFolderId + '#grid';
   }
 }
 

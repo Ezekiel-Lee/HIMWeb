@@ -617,6 +617,9 @@ function renderPendingPosts(posts){
           post.image_urls.map(function(u){ return '<img src="' + u + '" style="width:64px;height:64px;object-fit:cover;border-radius:4px">'; }).join('') +
         '</div>'
       : '';
+    var driveLink = post.drive_folder_url
+      ? '<p style="margin-top:6px"><a href="' + escapeAttr(post.drive_folder_url) + '" target="_blank" rel="noopener" style="color:#4A6FA5">📁 Drive 폴더 열기</a></p>'
+      : '';
     return '' +
     '<div class="admin-card" data-id="' + post.id + '">' +
       '<div class="admin-card-body">' +
@@ -625,6 +628,7 @@ function renderPendingPosts(posts){
         '<p>' + escapeHtmlAdmin(post.content) + '</p>' +
         (post.youtube_url ? '<p style="color:var(--gold);margin-top:6px">▶ ' + escapeHtmlAdmin(post.youtube_url) + '</p>' : '') +
         images +
+        driveLink +
       '</div>' +
       '<div class="admin-card-actions">' +
         '<button class="btn-approve" onclick="approvePost(\'' + post.id + '\', this)">승인</button>' +
@@ -659,6 +663,9 @@ function renderPublishedPostCard(post){
       '</div>'
     : '';
   var noticeFlag = post.is_notice ? '<span class="notice-flag">📌 공지</span>' : '';
+  var driveLink = post.drive_folder_url
+    ? '<p style="margin-top:6px"><a href="' + escapeAttr(post.drive_folder_url) + '" target="_blank" rel="noopener" style="color:#4A6FA5">📁 Drive 폴더 열기</a></p>'
+    : '';
   return '' +
   '<div class="admin-card" data-id="' + post.id + '">' +
     '<div class="admin-card-body">' +
@@ -667,6 +674,7 @@ function renderPublishedPostCard(post){
       '<p>' + escapeHtmlAdmin(post.content) + '</p>' +
       (post.youtube_url ? '<p style="color:var(--gold);margin-top:6px">▶ ' + escapeHtmlAdmin(post.youtube_url) + '</p>' : '') +
       images +
+      driveLink +
     '</div>' +
     '<div class="admin-card-actions">' +
       '<button class="btn-edit" onclick="editPost(\'' + post.id + '\')">수정</button>' +
@@ -685,6 +693,7 @@ function editPost(id){
       '<label>제목</label><input type="text" id="edit-title-' + id + '" value="' + escapeAttr(post.title) + '">' +
       '<label>내용</label><textarea id="edit-content-' + id + '" rows="4">' + escapeAttr(post.content) + '</textarea>' +
       '<label>YouTube 링크 (선택)</label><input type="text" id="edit-youtube-' + id + '" value="' + escapeAttr(post.youtube_url) + '">' +
+      '<label>Google Drive 폴더 링크 (선택)</label><input type="text" id="edit-drive-' + id + '" value="' + escapeAttr(post.drive_folder_url) + '">' +
       '<label style="display:flex;align-items:center;gap:8px;margin-bottom:14px"><input type="checkbox" id="edit-notice-' + id + '" style="width:auto" ' + (post.is_notice ? 'checked' : '') + '> 공지사항으로 고정</label>' +
       '<div style="display:flex;gap:8px">' +
         '<button class="btn-approve" onclick="savePostEdit(\'' + id + '\')">저장</button>' +
@@ -704,6 +713,7 @@ function savePostEdit(id){
   var title = document.getElementById('edit-title-' + id).value;
   var content = document.getElementById('edit-content-' + id).value;
   var youtube = document.getElementById('edit-youtube-' + id).value;
+  var drive = document.getElementById('edit-drive-' + id).value;
   var notice = document.getElementById('edit-notice-' + id).checked;
 
   if (!title.trim() || !content.trim()){
@@ -713,7 +723,7 @@ function savePostEdit(id){
 
   sb.from('posts').update({
     category: category, title: title, content: content,
-    youtube_url: youtube || null, is_notice: notice
+    youtube_url: youtube || null, drive_folder_url: drive || null, is_notice: notice
   }).eq('id', id)
   .then(function(res){
     if (res.error){ alert('오류: ' + res.error.message); return; }
