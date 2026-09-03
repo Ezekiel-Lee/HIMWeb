@@ -78,6 +78,7 @@ body.en span.en{display:inline} body.en span.ko{display:none}
   opacity:0;pointer-events:none;
   transition:opacity .4s var(--ease);
   display:flex;align-items:center;justify-content:center;
+  overflow-y:auto;padding:90px 20px 50px;
 }
 #menu.open{opacity:1;pointer-events:all}
 
@@ -113,6 +114,18 @@ body.en span.en{display:inline} body.en span.ko{display:none}
 .menu-list li:nth-child(5) a{transition-delay:.2s}
 .menu-list li:nth-child(6) a{transition-delay:.24s}
 .menu-list a.current{color:var(--gold)}
+.menu-row{display:flex;align-items:center;justify-content:center;gap:12px}
+.menu-caret{background:none;border:none;cursor:pointer;padding:10px;margin:-10px 0;color:rgba(255,255,255,.3);opacity:0;transform:translateY(100%);transition:transform .5s var(--ease),color .25s,opacity .25s}
+#menu.open .menu-caret{opacity:1;transform:translateY(0)}
+.menu-caret svg{display:block;width:15px;height:15px;transition:transform .35s var(--ease)}
+li.has-sub.open .menu-caret{color:var(--gold)}
+li.has-sub.open .menu-caret svg{transform:rotate(180deg)}
+.submenu{list-style:none;max-height:0;overflow:hidden;opacity:0;transition:max-height .4s var(--ease),opacity .3s var(--ease)}
+li.has-sub.open .submenu{max-height:280px;opacity:1}
+.submenu li{overflow:visible}
+.submenu a{display:block;font-family:var(--sans);font-size:13px;font-weight:400;color:rgba(255,255,255,.4);letter-spacing:.03em;padding:7px 0;transform:none}
+.submenu a:hover{color:var(--gold2)}
+section[id]{scroll-margin-top:90px}
 
 /* ── PAGE HERO (compact, for sub-pages) ── */
 .page-hero{
@@ -284,12 +297,63 @@ footer{background:#0D1A27;padding:48px 40px}
 </button>
 <div id="menu">
   <ul class="menu-list">
-    <li><a href="about.html" class="current"><span class="menu-num">01</span><span class="ko">선교회 소개</span><span class="en">About</span></a></li>
-    <li><a href="ministry.html"><span class="menu-num">02</span><span class="ko">사역</span><span class="en">Ministry</span></a></li>
-    <li><a href="people.html"><span class="menu-num">03</span><span class="ko">사람들</span><span class="en">People</span></a></li>
-    <li><a href="media.html"><span class="menu-num">04</span><span class="ko">미디어</span><span class="en">Media</span></a></li>
+    <li class="has-sub">
+      <div class="menu-row">
+        <a href="about.html" class="current" onclick="toggleSubmenu(event,this)"><span class="menu-num">01</span><span class="ko">선교회 소개</span><span class="en">About</span></a>
+        <button type="button" class="menu-caret" onclick="toggleSubmenu(event,this)" aria-label="하위 메뉴 열기" aria-expanded="false"><svg viewBox="0 0 16 16" fill="none"><path d="M3 6l5 5 5-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      </div>
+      <ul class="submenu">
+        <li><a href="about.html#about-grid"><span class="ko">설립 배경</span><span class="en">Our Founding</span></a></li>
+        <li><a href="about.html#timeline"><span class="ko">연혁</span><span class="en">Timeline</span></a></li>
+        <li><a href="about.html#activities"><span class="ko">최근 활동</span><span class="en">Recent Activities</span></a></li>
+        <li><a href="about.html#spirit"><span class="ko">사역 정신</span><span class="en">Our Spirit</span></a></li>
+      </ul>
+    </li>
+    <li class="has-sub">
+      <div class="menu-row">
+        <a href="ministry.html" onclick="toggleSubmenu(event,this)"><span class="menu-num">02</span><span class="ko">사역</span><span class="en">Ministry</span></a>
+        <button type="button" class="menu-caret" onclick="toggleSubmenu(event,this)" aria-label="하위 메뉴 열기" aria-expanded="false"><svg viewBox="0 0 16 16" fill="none"><path d="M3 6l5 5 5-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      </div>
+      <ul class="submenu">
+        <li><a href="ministry.html#creation"><span class="ko">창조 신앙</span><span class="en">Creation Faith</span></a></li>
+        <li><a href="ministry.html#pillars"><span class="ko">핵심 사역</span><span class="en">Core Ministries</span></a></li>
+      </ul>
+    </li>
+    <li class="has-sub">
+      <div class="menu-row">
+        <a href="people.html" onclick="toggleSubmenu(event,this)"><span class="menu-num">03</span><span class="ko">사람들</span><span class="en">People</span></a>
+        <button type="button" class="menu-caret" onclick="toggleSubmenu(event,this)" aria-label="하위 메뉴 열기" aria-expanded="false"><svg viewBox="0 0 16 16" fill="none"><path d="M3 6l5 5 5-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      </div>
+      <ul class="submenu">
+        <li><a href="people.html#director"><span class="ko">인사말</span><span class="en">Director's Message</span></a></li>
+        <li><a href="people.html#team"><span class="ko">섬기는 사람들</span><span class="en">Our Team</span></a></li>
+        <li><a href="people.html#join"><span class="ko">함께하기</span><span class="en">Get Involved</span></a></li>
+      </ul>
+    </li>
+    <li class="has-sub">
+      <div class="menu-row">
+        <a href="media.html" onclick="toggleSubmenu(event,this)"><span class="menu-num">04</span><span class="ko">미디어</span><span class="en">Media</span></a>
+        <button type="button" class="menu-caret" onclick="toggleSubmenu(event,this)" aria-label="하위 메뉴 열기" aria-expanded="false"><svg viewBox="0 0 16 16" fill="none"><path d="M3 6l5 5 5-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      </div>
+      <ul class="submenu">
+        <li><a href="media.html#youtube"><span class="ko">유튜브</span><span class="en">YouTube</span></a></li>
+        <li><a href="media.html#channels"><span class="ko">채널</span><span class="en">Channels</span></a></li>
+        <li><a href="media.html#community-videos"><span class="ko">커뮤니티 영상</span><span class="en">Community Videos</span></a></li>
+        <li><a href="media.html#library"><span class="ko">자료실</span><span class="en">Resource Library</span></a></li>
+      </ul>
+    </li>
     <li><a href="board.html"><span class="menu-num">05</span><span class="ko">게시판</span><span class="en">News</span></a></li>
-    <li><a href="support.html"><span class="menu-num">06</span><span class="ko">후원 문의</span><span class="en">Support</span></a></li>
+    <li class="has-sub">
+      <div class="menu-row">
+        <a href="support.html" onclick="toggleSubmenu(event,this)"><span class="menu-num">06</span><span class="ko">후원 문의</span><span class="en">Support</span></a>
+        <button type="button" class="menu-caret" onclick="toggleSubmenu(event,this)" aria-label="하위 메뉴 열기" aria-expanded="false"><svg viewBox="0 0 16 16" fill="none"><path d="M3 6l5 5 5-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      </div>
+      <ul class="submenu">
+        <li><a href="support.html#ways"><span class="ko">후원 방법</span><span class="en">Ways to Give</span></a></li>
+        <li><a href="support.html#booking"><span class="ko">교육 신청</span><span class="en">Book a Program</span></a></li>
+        <li><a href="support.html#contact"><span class="ko">문의하기</span><span class="en">Contact Us</span></a></li>
+      </ul>
+    </li>
   </ul>
 </div>
 
@@ -483,6 +547,16 @@ function toggleMenu(){
   if (m) m.classList.toggle('open');
   if (b) b.classList.toggle('open');
   if (c) c.classList.toggle('show');
+}
+
+/* Expand/collapse a submenu inside the fullscreen menu */
+function toggleSubmenu(e, btn){
+  e.preventDefault();
+  e.stopPropagation();
+  var li = btn.closest('li');
+  if (!li) return;
+  var open = li.classList.toggle('open');
+  btn.setAttribute('aria-expanded', open ? 'true' : 'false');
 }
 
 /* Close menu on link click (mobile convenience) */
