@@ -237,6 +237,14 @@ footer{background:#0D1A27;padding:48px 40px}
 #booking{background:var(--warm)}
 .booking-grid{display:grid;grid-template-columns:3fr 2fr;gap:40px;align-items:start}
 .booking-calendar{background:#fff;border:1px solid rgba(15,28,46,.1);border-radius:6px;padding:16px;overflow:hidden}
+.sched-wrap{margin-top:20px;padding-top:20px;border-top:1px solid rgba(15,28,46,.08)}
+.sched-title{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+.sched-list{max-height:320px;overflow-y:auto}
+.sched-item{display:flex;gap:14px;padding:10px 0;border-bottom:1px solid rgba(15,28,46,.06);font-size:12.5px;line-height:1.6}
+.sched-item:last-child{border-bottom:none}
+.sched-date{flex:0 0 auto;min-width:96px;color:var(--gold);font-weight:600;white-space:nowrap}
+.sched-title-text{color:var(--txt);font-weight:400}
+.sched-item.sched-past{opacity:.45}
 .booking-form-box{background:#fff;border:1px solid rgba(15,28,46,.1);border-radius:6px;padding:32px}
 .fr2{margin-bottom:16px}
 .fr2 label{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
@@ -405,6 +413,12 @@ footer{background:#0D1A27;padding:48px 40px}
           <span><i class="cal-dot cal-dot-confirmed"></i><span class="ko">예약 확정</span><span class="en">Confirmed</span></span>
         </div>
         <div class="cal-grid" id="cal-grid"></div>
+        <div class="sched-wrap">
+          <p class="sched-title"><span class="ko">다가오는 사역 일정</span><span class="en">Upcoming Ministry Schedule</span></p>
+          <div class="sched-list" id="sched-list">
+            <p style="font-size:12px;color:var(--muted)"><span class="ko">불러오는 중...</span><span class="en">Loading...</span></p>
+          </div>
+        </div>
       </div>
 
       <div class="booking-form-box">
@@ -682,6 +696,42 @@ function loadCalendarBookings(){
     .catch(function(){ renderCalendarGrid(); });
 }
 
+/* ── 다가오는 사역 일정 (공개 스케줄 목록) ── */
+function fmtSchedDate(startStr, endStr){
+  var s = new Date(startStr + 'T00:00:00');
+  var e = new Date(endStr + 'T00:00:00');
+  var opt = { month:'2-digit', day:'2-digit' };
+  var sTxt = s.getFullYear() + '.' + s.toLocaleDateString('ko-KR', opt).replace(/^0/,'');
+  if (startStr === endStr) return sTxt;
+  var eTxt = (e.getFullYear() !== s.getFullYear())
+    ? e.getFullYear() + '.' + e.toLocaleDateString('ko-KR', opt)
+    : e.toLocaleDateString('ko-KR', opt);
+  return sTxt + ' – ' + eTxt.replace(/^0/,'');
+}
+
+function loadPublicSchedule(){
+  var list = document.getElementById('sched-list');
+  if (!sb || !list) return;
+  sb.rpc('list_public_schedule')
+    .then(function(res){
+      if (res.error || !res.data || !res.data.length){
+        list.innerHTML = '<p style="font-size:12px;color:var(--muted)"><span class="ko">등록된 일정이 없습니다.</span><span class="en">No scheduled events yet.</span></p>';
+        return;
+      }
+      var today = new Date(); today.setHours(0,0,0,0);
+      list.innerHTML = res.data.map(function(ev){
+        var isPast = new Date(ev.end_date + 'T00:00:00') < today;
+        return '<div class="sched-item' + (isPast ? ' sched-past' : '') + '">'
+          + '<span class="sched-date">' + fmtSchedDate(ev.start_date, ev.end_date) + '</span>'
+          + '<span class="sched-title-text">' + escapeHtml(ev.title) + '</span>'
+          + '</div>';
+      }).join('');
+    })
+    .catch(function(){
+      list.innerHTML = '<p style="font-size:12px;color:var(--muted)"><span class="ko">일정을 불러오지 못했습니다.</span><span class="en">Could not load schedule.</span></p>';
+    });
+}
+
 /* ── 신청 가능 여부 실시간 확인 ── */
 function checkDateAvailability(){
   var startInput = document.getElementById('bk-date-start');
@@ -801,6 +851,7 @@ function submitBooking(e){
 document.addEventListener('DOMContentLoaded', function(){
   renderCalendarGrid();
   loadCalendarBookings();
+  loadPublicSchedule();
   renderBkTurnstile();
 });
 </script>

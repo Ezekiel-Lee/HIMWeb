@@ -204,6 +204,18 @@ begin
 end;
 $$ language plpgsql security definer stable;
 
+-- 방문자용 "다가오는 사역 일정" 목록 — 확정된 일정의 제목/날짜만 공개
+-- (신청자 개인정보는 노출하지 않음. support.html 예약 캘린더 아래에 표시됩니다.)
+create or replace function list_public_schedule()
+returns table(title text, start_date date, end_date date) as $$
+begin
+  return query select b.title, b.start_date, b.end_date
+    from bookings b
+    where b.status = 'confirmed'
+    order by b.start_date;
+end;
+$$ language plpgsql security definer stable;
+
 -- 특정 기간이 비어있는지 실시간 확인 (신청 폼에서 사용)
 create or replace function check_availability(p_start_date date, p_end_date date)
 returns boolean as $$
