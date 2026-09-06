@@ -218,6 +218,24 @@ footer{background:#0D1A27;padding:48px 40px}
 #activities{background:var(--cream)}
 .activities-calendar{background:#fff;border:1px solid rgba(15,28,46,.1);border-radius:6px;padding:24px;overflow:hidden;max-width:900px}
 
+/* What We Do — cards + table */
+.do-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:rgba(15,28,46,.08);margin-bottom:64px;border:1px solid rgba(15,28,46,.08)}
+.do-card{background:var(--cream);padding:36px 26px}
+.dc-num{font-family:var(--serif);font-size:13px;color:var(--gold);letter-spacing:.08em;margin-bottom:12px;display:block}
+.do-card h3{font-family:var(--serif);font-size:18px;font-weight:700;color:var(--navy);margin-bottom:10px}
+.do-card p{font-size:13px;line-height:1.85;color:var(--muted);font-weight:300;margin-bottom:14px}
+.do-card ul{margin:0;padding-left:16px;font-size:12px;line-height:1.9;color:var(--muted);font-weight:300}
+.do-card li{margin-bottom:4px}
+.do-table-wrap{overflow-x:auto;margin-bottom:56px}
+.do-table{width:100%;border-collapse:collapse;min-width:760px;font-size:13px}
+.do-table th{background:var(--navy);color:#fff;font-weight:500;text-align:left;padding:14px 18px;font-size:12px;letter-spacing:.04em}
+.do-table td{padding:18px;border-bottom:1px solid rgba(15,28,46,.08);vertical-align:top;line-height:1.85;color:#4a3e36;font-weight:300}
+.do-table tr:last-child td{border-bottom:none}
+.do-table td:first-child{font-weight:600;color:var(--navy);white-space:nowrap}
+.do-table ul{margin:0;padding-left:16px}
+.do-table li{margin-bottom:8px}
+.do-table li:last-child{margin-bottom:0}
+
 /* ── 활동 달력 (읽기 전용) ── */
 .cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
 .cal-nav{padding:9px 16px;background:var(--warm);border:1px solid rgba(15,28,46,.12);border-radius:4px;font-size:13px;font-weight:500;color:var(--navy);cursor:pointer}
@@ -239,8 +257,19 @@ footer{background:#0D1A27;padding:48px 40px}
 .tl-year{font-family:var(--serif);font-size:22px;font-weight:700;color:var(--gold2);margin-bottom:8px}
 .tl-text{font-size:14px;line-height:1.95;color:rgba(255,255,255,.55);font-weight:300;max-width:600px}
 
+/* Era cards (Short History) */
+.era-list{max-width:820px;margin:0 auto}
+.era-card{padding-bottom:56px;margin-bottom:56px;border-bottom:1px solid rgba(255,255,255,.1)}
+.era-card:last-child{padding-bottom:0;margin-bottom:0;border-bottom:none}
+.era-year{display:inline-block;font-family:var(--sans);font-size:12px;font-weight:700;letter-spacing:.08em;color:var(--navy);background:var(--gold2);padding:6px 16px;border-radius:20px;margin-bottom:18px}
+.era-card h3{font-family:var(--serif);font-size:24px;font-weight:700;color:#fff;margin-bottom:18px;line-height:1.4}
+.era-card h4{font-family:var(--serif);font-size:16px;font-weight:700;color:var(--gold2);margin:26px 0 12px}
+.era-card p{font-size:14px;line-height:2;color:rgba(255,255,255,.6);font-weight:300;margin-bottom:14px}
+.era-card ul{margin:0 0 14px 18px;font-size:14px;line-height:1.9;color:rgba(255,255,255,.6);font-weight:300}
+.era-card li{margin-bottom:6px}
+
 /* Spirit cards */
-#spirit{background:var(--cream);padding:0}
+#spirit{background:var(--cream)}
 .sg{display:grid;grid-template-columns:repeat(3,1fr)}
 .sc{padding:64px 48px;border-right:1px solid rgba(15,28,46,.08);position:relative;overflow:hidden;background:var(--warm)}
 .sc:last-child{border-right:none}
@@ -248,6 +277,16 @@ footer{background:#0D1A27;padding:48px 40px}
 .sc h3{font-family:var(--serif);font-size:21px;font-weight:700;color:var(--navy);margin-bottom:14px}
 .sc p{font-size:13px;line-height:2;color:var(--muted);font-weight:300}
 .sln{width:32px;height:2px;background:var(--gold);margin-bottom:24px}
+
+/* What We Believe */
+.belief-list{list-style:none;counter-reset:belief;max-width:820px;margin:0}
+.belief-list li{position:relative;padding:28px 0 28px 56px;border-bottom:1px solid rgba(15,28,46,.08);counter-increment:belief}
+.belief-list li:first-child{padding-top:0}
+.belief-list li:last-child{border-bottom:none;padding-bottom:0}
+.belief-list li::before{content:counter(belief);position:absolute;left:0;top:28px;font-family:var(--serif);font-size:20px;font-weight:700;color:var(--gold)}
+.belief-list li:first-child::before{top:0}
+.belief-text{font-size:14px;line-height:2;color:#3a3128;font-weight:300}
+.belief-ref{display:block;margin-top:8px;font-size:11px;color:var(--muted);letter-spacing:.02em}
 
 /* Name meaning band */
 #name-meaning{background:var(--warm)}
@@ -270,6 +309,7 @@ footer{background:#0D1A27;padding:48px 40px}
   .sg{grid-template-columns:1fr}
   .sc{border-right:none;border-bottom:1px solid rgba(15,28,46,.08)}
   .nm-wrap{grid-template-columns:1fr;text-align:center;justify-items:center}
+  .do-cards{grid-template-columns:1fr 1fr}
 }
 </style>
 </head>
@@ -303,10 +343,10 @@ footer{background:#0D1A27;padding:48px 40px}
         <button type="button" class="menu-caret" onclick="toggleSubmenu(event,this)" aria-label="하위 메뉴 열기" aria-expanded="false"><svg viewBox="0 0 16 16" fill="none"><path d="M3 6l5 5 5-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
       </div>
       <ul class="submenu">
-        <li><a href="about.html#about-grid"><span class="ko">설립 배경</span><span class="en">Our Founding</span></a></li>
-        <li><a href="about.html#timeline"><span class="ko">연혁</span><span class="en">Timeline</span></a></li>
-        <li><a href="about.html#activities"><span class="ko">최근 활동</span><span class="en">Recent Activities</span></a></li>
-        <li><a href="about.html#spirit"><span class="ko">사역 정신</span><span class="en">Our Spirit</span></a></li>
+        <li><a href="about.html#about-grid"><span class="ko">우리는 누구인가</span><span class="en">Who We Are</span></a></li>
+        <li><a href="about.html#activities"><span class="ko">우리가 하는 일</span><span class="en">What We Do</span></a></li>
+        <li><a href="about.html#spirit"><span class="ko">우리가 믿는 것</span><span class="en">What We Believe</span></a></li>
+        <li><a href="about.html#timeline"><span class="ko">연혁</span><span class="en">History</span></a></li>
       </ul>
     </li>
     <li class="has-sub">
@@ -315,8 +355,10 @@ footer{background:#0D1A27;padding:48px 40px}
         <button type="button" class="menu-caret" onclick="toggleSubmenu(event,this)" aria-label="하위 메뉴 열기" aria-expanded="false"><svg viewBox="0 0 16 16" fill="none"><path d="M3 6l5 5 5-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
       </div>
       <ul class="submenu">
-        <li><a href="ministry.html#creation"><span class="ko">창조 신앙</span><span class="en">Creation Faith</span></a></li>
-        <li><a href="ministry.html#pillars"><span class="ko">핵심 사역</span><span class="en">Core Ministries</span></a></li>
+        <li><a href="ministry.html#creation"><span class="ko">창조탐사사역</span><span class="en">Creation Expedition Ministry</span></a></li>
+        <li><a href="ministry.html#pillars"><span class="ko">창조캠프사역</span><span class="en">Creation Camp Ministry</span></a></li>
+        <li><a href="ministry.html#pillars"><span class="ko">세미나 및 교육사역</span><span class="en">Seminar &amp; Education Ministry</span></a></li>
+        <li><a href="ministry.html#pillars"><span class="ko">문서 및 미디어 사역</span><span class="en">Media &amp; Publication Ministry</span></a></li>
       </ul>
     </li>
     <li class="has-sub">
@@ -345,12 +387,14 @@ footer{background:#0D1A27;padding:48px 40px}
     <li><a href="board.html"><span class="menu-num">05</span><span class="ko">게시판</span><span class="en">News</span></a></li>
     <li class="has-sub">
       <div class="menu-row">
-        <a href="support.html" onclick="toggleSubmenu(event,this)"><span class="menu-num">06</span><span class="ko">후원 문의</span><span class="en">Support</span></a>
+        <a href="support.html" onclick="toggleSubmenu(event,this)"><span class="menu-num">06</span><span class="ko">사역 및 후원문의</span><span class="en">Ministry &amp; Support</span></a>
         <button type="button" class="menu-caret" onclick="toggleSubmenu(event,this)" aria-label="하위 메뉴 열기" aria-expanded="false"><svg viewBox="0 0 16 16" fill="none"><path d="M3 6l5 5 5-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
       </div>
       <ul class="submenu">
+        <li><a href="support.html#booking"><span class="ko">코스 안내</span><span class="en">Creation Expedition Course</span></a></li>
+        <li><a href="support.html#booking"><span class="ko">프로그램 안내</span><span class="en">Creation Camp Program</span></a></li>
+        <li><a href="support.html#booking"><span class="ko">세미나 안내</span><span class="en">Creation Seminar</span></a></li>
         <li><a href="support.html#ways"><span class="ko">후원 방법</span><span class="en">Ways to Give</span></a></li>
-        <li><a href="support.html#booking"><span class="ko">교육 신청</span><span class="en">Book a Program</span></a></li>
         <li><a href="support.html#contact"><span class="ko">문의하기</span><span class="en">Contact Us</span></a></li>
       </ul>
     </li>
@@ -380,24 +424,29 @@ footer{background:#0D1A27;padding:48px 40px}
       </div>
     </div>
     <div class="at">
-      <p class="ey rv"><span class="ko">설립 발기문</span><span class="en">Founding Declaration</span></p>
-      <h2 class="st rv" style="color:var(--navy);margin-bottom:28px"><span class="ko">왜 이 선교회가<br><em>세워졌는가</em></span><span class="en">Why This Mission<br><em>Was Founded</em></span></h2>
+      <p class="ey rv"><span class="ko">HiM 선교회</span><span class="en">Who We Are</span></p>
+      <h2 class="st rv" style="color:var(--navy);margin-bottom:28px"><span class="ko">우리는 <em>누구인가</em></span><span class="en">Who <em>We Are</em></span></h2>
       <div class="tabs rv">
-        <button class="tab on" onclick="switchTab(this,'t1','#about-grid')"><span class="ko">설립 배경</span><span class="en">Foundation</span></button>
-        <button class="tab" onclick="switchTab(this,'t2','#about-grid')"><span class="ko">핵심 사역</span><span class="en">Ministry</span></button>
-        <button class="tab" onclick="switchTab(this,'t3','#about-grid')"><span class="ko">이름의 의미</span><span class="en">Our Name</span></button>
+        <button class="tab on" onclick="switchTab(this,'t1','#about-grid')"><span class="ko">이름의 뜻</span><span class="en">Our Name</span></button>
+        <button class="tab" onclick="switchTab(this,'t2','#about-grid')"><span class="ko">시대적 요청</span><span class="en">Why Now</span></button>
+        <button class="tab" onclick="switchTab(this,'t3','#about-grid')"><span class="ko">우리의 정체성</span><span class="en">Our Identity</span></button>
+        <button class="tab" onclick="switchTab(this,'t4','#about-grid')"><span class="ko">왜 선교하는가</span><span class="en">Why We Serve</span></button>
       </div>
       <div id="t1" class="tpanel on rv">
-        <div class="ko"><h3>선교회 설립 발기문</h3><p>1889년 10월, 은둔의 땅 조선에 첫 발을 내디딘 조셉 헨리 데이비스 선교사님은 한국 기독교 역사에서 깊은 비중을 차지합니다. 조선 땅을 밟은 지 6개월 만에 부산으로 향하던 중 수두와 폐렴으로 1890년 4월 5일 소천하셨습니다.</p><div class="bq">"진실로 한 알의 밀알이 이 땅에 떨어져 썩음으로 열배 스무배, 여러 백배의 결실을 맺는 역사가 이루어진 것입니다."</div><p>HiM 선교회는 이 헌신을 기억하고 계승하기 위해 호주에 거주하는 한인 디아스포라 그리스도인들이 세운 선교 법인입니다.</p></div>
-        <div class="en"><h3>Founding Declaration</h3><p>In October 1889, Rev. Joseph Henry Davies arrived in Korea as the first missionary of the Australian Presbyterian Church. Within six months, he died on April 5, 1890, while making his way on foot to Busan.</p><div class="bq">"A single grain fell to the earth and bore a harvest a hundred times over — the history of Australian missions to Korea bears this out."</div><p>HisCreation iDefend Mission (HiM) was founded by Korean-Australian Christians to honour this legacy and carry it forward through media, document, and digital mission.</p></div>
+        <div class="ko"><h3>HiM 이름이 뜻하는 것</h3><p>선교회의 이름을 HiM (HisCreation iDefend Mission)으로 지은 것은 하나님의 창조 사실을 변증하고 변호, 옹호하는 선교단체라는 뜻을 펴기 위해서입니다.</p><div class="bq" style="font-style:normal;font-family:var(--sans);font-size:14px;line-height:2.2"><strong>HisCreation</strong> — 하나님의 창조 사실을<br><strong>iDefend</strong> — 너와 내가 변증, 방어, 변호하는<br><strong>Mission</strong> — 임무, 그리고 이 임무를 수행하는 선교 단체</div><p>이런 뜻을 담았습니다.</p></div>
+        <div class="en"><h3>What "HiM" Means</h3><p>Our name, HiM (HisCreation iDefend Mission), declares who we are: a mission that defends and upholds the truth of God's creation.</p><div class="bq" style="font-style:normal;font-family:var(--sans);font-size:14px;line-height:2.2"><strong>His Creation</strong> — the truth of God's creation<br><strong>iDefend</strong> — that you and I defend<br><strong>Mission</strong> — as the task, and the community that carries it out</div></div>
       </div>
       <div id="t2" class="tpanel rv">
-        <div class="ko"><h3>핵심 사역 및 방향성</h3><p><strong>문서 선교, 디지털 선교, 리서치 선교</strong>를 3대 사역 축으로 삼습니다. 성경 번역·출판, 디지털 전도 매체 보급, Kominet 네트워크, '루디아' 홈스테이 운영 등을 통해 선교사와 후원자를 연결합니다. 브리즈번·시드니에서 창조과학 교실과 세미나를 정기 개최합니다.</p></div>
-        <div class="en"><h3>Core Ministry Areas</h3><p>Three ministry streams: <strong>document, digital, and research mission</strong>. We produce Bible translations, Christian literature, multilingual mission resources, operate the Kominet missionary network and the "Lydia" homestay network, and host regular Creation Science seminars in Brisbane and Sydney.</p></div>
+        <div class="ko"><h3>시대적 요청</h3><p>창조신앙 변증을 주된 사역 방향으로 정한 배경에는 이 시대가 반영하는 시대적 요청이 있다고 생각했기 때문입니다.</p><ul style="margin:0;padding-left:18px;font-size:14px;line-height:2;color:#4a3e36;font-weight:300"><li style="margin-bottom:14px">배도의 시대, 미혹의 시대를 맞아 하나님의 말씀인 성경의 권위가 땅에 떨어지고 특히 창세기를 비롯한 성경 기록이 하나님의 말씀일 수가 없다는 이단 사상과 주장이 교회 내에서 고개를 들고 있습니다.</li><li style="margin-bottom:14px">과학은 진리 자체를 다루는 학문이요 진화론은 증명된 과학적 사실이라고 믿는 과학주의가 교회 안팎에 팽배해져 가는 상황입니다.</li><li style="margin-bottom:14px">과학주의에 기반한 진화론 교육을 공교육 체계에서 받고 있는 우리의 차세대 청년들이 자연주의 세계관적 진화론의 영향으로 창세기의 창조 기사를 사실로 믿지 못하고 나아가 성경 전체를 복음으로 받아들이지 못하는 일이 교회 안에서 일어나고 있습니다.</li><li>특히 최근에 이르러 "하나님께서 진화의 방법을 통해 창조하셨다"고 주장하는 유신 진화론이라는 이단 사상이 교회 내로 물밀 듯 침투해 오고 있는데 교회가 이에 올바로 대처하지 못하고 있음으로 — 교회의 다음 세대인 젊은 영혼들을 유신진화론의 진영으로 속속 넘겨주고 마는 안타깝고도 긴박한 상황에 놓여 있다고 생각되고 있습니다.</li></ul></div>
+        <div class="en"><h3>Why This Matters Now</h3><p>We chose to focus on defending the creation faith because of what this age demands of the church.</p><ul style="margin:0;padding-left:18px;font-size:14px;line-height:2;color:rgba(255,255,255,.7);font-weight:300"><li style="margin-bottom:14px">In an age of apostasy and deception, the authority of Scripture — especially Genesis — is increasingly challenged, even within the church.</li><li style="margin-bottom:14px">Scientism, which treats evolution as proven fact, is spreading both inside and outside the church.</li><li style="margin-bottom:14px">Raised on evolutionary education, many young believers can no longer accept Genesis as historical fact — or the gospel as a whole.</li><li>Theistic evolution — the claim that "God created through evolution" — is spreading rapidly through the church, and too few congregations are equipped to respond.</li></ul></div>
       </div>
       <div id="t3" class="tpanel rv">
-        <div class="ko"><h3>선교회 이름의 의미</h3><p><strong>JOSEPH DAVIES (JD) MEMORIAL ASSOCIATION INC.</strong> — "JD"는 Joseph Davies의 이니셜이며, "Memorial"은 그의 순교적 헌신을 기억한다는 뜻입니다. 호주 한인 디아스포라 그리스도인들이 그의 열정을 미디어로 계승합니다.</p></div>
-        <div class="en"><h3>The Meaning of Our Name</h3><p><strong>Joseph Davies (JD) Memorial Association Inc.</strong> — "JD" are his initials; "Memorial" affirms that his sacrifice is not forgotten. Korean-Australian Christians carry his mission forward through modern media.</p></div>
+        <div class="ko"><h3>우리의 정체성 (Our Identity)</h3><p>HiM 선교회는 —</p><p><strong>창조 신앙 변증을 주력 사역 내용으로 하는 선교 단체입니다.</strong> 하나님의 창조주 하나님 되심과 성경의 역사성 및 사실성을 변증하고 특히 창조 신앙 전파를 주력으로 하는 창조 신앙 변증 전문 선교 단체를 지향합니다.</p><p><strong>미디어 사역을 동시에 진행하고 있습니다.</strong> 유튜브를 비롯한 온라인 매체와 SNS 채널을 통해 메인 타겟인 MZ 세대에 접근해 가는 미디어 선교 사역을 펼쳐 나가고 있습니다.</p><p><strong>다중 언어 문서 선교 사역을 감당합니다.</strong> 영어뿐 아니라 중국어, 일본어, 인도네시아어, 베트남어 등 아시아 태평양 지역 내 다양한 언어를 통한 미디어 제작, 출판 등 다중 언어 문서 선교 사역을 추구하고자 합니다.</p><p><strong>평신도 전문인 선교 단체를 지향합니다.</strong> 각자가 주어진 생업의 터전인 전문 분야에서 활동하면서 삶의 현장에서 선교의 삶을 살아 내고자 하는 전문인 선교사 단체를 지향하고 있습니다.</p></div>
+        <div class="en"><h3>Our Identity</h3><p>HiM is —</p><p><strong>A mission devoted to defending the creation faith.</strong> We defend the historicity and truth of Scripture and God's role as Creator, with creation-faith outreach as our core focus.</p><p><strong>A media mission.</strong> We reach the MZ generation through YouTube and other online and social channels.</p><p><strong>A multilingual document mission.</strong> Beyond English, we produce and publish media in Chinese, Japanese, Indonesian, Vietnamese, and other Asia-Pacific languages.</p><p><strong>A lay professional mission.</strong> Our members live out their calling as missionaries within their own professional fields.</p></div>
+      </div>
+      <div id="t4" class="tpanel rv">
+        <div class="ko"><h3>왜 선교하는가?</h3><p>"왜 선교하는가"라고 누가 묻는다면 저희는 —</p><p><strong>1. 전하지 않고는 견딜 수 없는 사명감 때문이라고 말하려 합니다.</strong> 사도 바울은 '이 복음을 전하지 않으면 내게 화가 있으리라'고 고백합니다. 에스겔 3장은 '그는 그 죄값에 죽으려니와 그 핏값은 우리에게서 찾으리라'고 말씀합니다. 그러나 우리는 화나 재앙 때문이 아니라, 우리가 받은 구원의 은혜와 감격이 너무도 커서 이 좋은 소식을 전하지 않고는 차마 견딜 수 없기 때문에 전도·선교합니다.</p><p><strong>2. 선교는 주님의 지상 명령이기 때문입니다.</strong> 행 1:8은 "너희가 땅끝까지 이르러 내 증인이 되리라" 하시고, 마 28:18-20은 "너희는 가서 모든 민족을 제자로 삼아 내가 너희에게 분부한 모든 것을 가르쳐 지키게 하라" 말씀하십니다. 우리는 이 대사명에 순종하되, 의무가 아니라 영혼을 사랑하는 마음으로, 억지가 아니라 자원함으로 행하려 합니다.</p><p><strong>3. 선교의 긴박성 때문입니다.</strong> 지금은 마지막 시대, 미혹의 시대입니다. 예수님의 재림 이전에 온 천하에 복음이 전해져야 한다는 이 긴박한 시대를 살고 있기에 저희는 선교·전도해야 합니다.</p></div>
+        <div class="en"><h3>Why We Serve</h3><p>If asked why we serve in mission, we would say —</p><p><strong>1. Because we cannot bear to stay silent.</strong> Not out of fear of judgment, but because the grace of our own salvation is too great to keep to ourselves.</p><p><strong>2. Because mission is the Lord's Great Commission.</strong> We obey it not as a burden but out of love for souls, freely and willingly.</p><p><strong>3. Because of the urgency of the hour.</strong> We believe we are living in the last days, when the gospel must reach all nations before Christ returns.</p></div>
       </div>
     </div>
   </div>
@@ -406,28 +455,77 @@ footer{background:#0D1A27;padding:48px 40px}
 <!-- TIMELINE -->
 <section id="timeline">
   <div class="w">
-    <p class="ey rv"><span class="ko">역사</span><span class="en">Our History</span></p>
-    <h2 class="st stw rv" style="margin-bottom:56px"><span class="ko">한 알의 밀알, <em>백배의 결실</em></span><span class="en">One Seed, <em>A Hundredfold Harvest</em></span></h2>
-    <div class="tl rv d1">
-      <div class="tl-item">
-        <span class="tl-dot"></span>
-        <p class="tl-year">1889</p>
-        <p class="tl-text"><span class="ko">조셉 헨리 데이비스 선교사, 누이 메리 데이비스와 함께 조선에 도착. 호주장로교회 최초의 한국 선교사로 부산 경남 지역 복음화를 목표로 출발합니다.</span><span class="en">Rev. Joseph Henry Davies arrives in Korea with his sister Mary — the first Korean missionary of the Australian Presbyterian Church, setting out to evangelise the Busan region.</span></p>
+    <p class="ey rv"><span class="ko">연혁</span><span class="en">Short History</span></p>
+    <h2 class="st stw rv" style="margin-bottom:56px"><span class="ko">HiM선교회의 <em>지나 온 길</em></span><span class="en">The Road <em>HiM Has Walked</em></span></h2>
+    <div class="era-list rv d1">
+      <div class="era-card">
+        <span class="era-year">Since 2019</span>
+        <div class="ko">
+          <h3>Joseph Davies Memorial Mission으로 출발</h3>
+          <p>선교회가 처음 만들어진 2019년부터 사용한 이름은 Joseph Davies Memorial Association Inc., 조셉 데이비스 메모리얼 선교법인입니다.</p>
+          <h4>'조셉 데이비스 기념 선교회' — 그 이름에 관한 내력</h4>
+          <p>Joseph Davies Memorial Association Inc.는 120년 전, 조선 땅에 뿌려진 한 알의 밀알인 조셉 헨리 데이비스 선교사 Joseph Henry Davies (1856~1890)를 기념하고, 온 족속을 제자 삼아 예수 그리스도의 가르침을 전하는 선교의 사명을 감당하기 위해 호주 브리즈번에 세워진 선교단체 법인(Incorporated Association)입니다. 우리가 은혜로 받은 값진 복음의 이면에 있는 귀한 이름, 그 이름을 딴 선교회가 호주 땅에 하나쯤 있어도 좋겠다는 생각을 했었습니다.</p>
+          <p>지금으로부터 120여 년 전인 1889년 10월에 은둔의 땅, 조선에 첫 발을 내디딘 호주 출신의 조셉 헨리 데이비스 선교사님이 한국 기독교 역사에서 적지 않은 비중을 차지하고 우리 한국 기독교인 사이에서 길이 기억되고 있는 이유는, 본인이 그토록 사역하기를 열망하였던 조선 나라에 도착한 직후에 너무도 갑작스럽게 돌아가신 그 안타까운 사실에 있습니다.</p>
+          <p>호주 교회가 조선에 처음 파송한 선교사인 조셉 헨리 데이비스 선교사님은 조선 땅을 밟은 지 6개월 만에 본인이 자원하여 선교 사역지로 정한 부산으로 도보로 여행을 하시다가 목적지 부산에 도착한 그 다음 날인 1890년 4월 5일에 여행 길에서 생긴 수두와 폐렴이 여독과 겹쳐 하루만에 급작스럽게 돌아가심으로써 조선 땅에 한 알의 밀알로 심겨진 순교자로 남게 되었습니다.</p>
+          <p>더욱 극적인 것은 데이비스 선교사가 조선 땅에서 불의의 병으로 쓰러져 죽은 그 순교적인 죽음에 고무된 호주 빅토리아 주 장로교회와 이후의 호주 장로교단 교회들이 데이비스 선교사의 조선에 대한 선교 열정을 이어받아 해방 전후로 해서 무려 126명이나 되는 호주 선교사들을 파송함으로써 조선 땅, 그 중에서도 경남 지방의 복음화에 앞장서게 된 역사적 사실입니다. 진실로 한 알의 밀알이 이 땅에 떨어져 열 배, 스무 배 그리고 여러 백 배의 결실을 맺는 역사가 이루어진 것입니다.</p>
+          <p>이런 데이비스 선교사님의 선교사역에 대한 헌신을 계승하고 나아가 '온 족속으로 제자를 삼아 가르치라'는 예수님의 거룩한 선교 명령에 순종하기 위해 지난 2019년 2월에 — 조셉 데이비스 선교사의 조국인 호주 나라 곧, 저희 한국 사람들이 복음의 빚을 지고 있고 또한 저희가 교민으로 살고 있는 이 호주 땅의 현지 복음화를 위하여 조셉 헨리 데이비스 메모리얼 선교 단체 Joseph H. Davies Memorial Mission Association (Unincorporated Association)가 호주 브리즈번에 설립된 바 있습니다.</p>
+          <h4>'조셉 데이비스 기념 선교회' 설립을 통해 저희가 이루고자 했던 것</h4>
+          <p>8년 전, 이 땅에 조셉 데이비스 선교사의 이름을 이어받은 선교 단체를 설립했던 목적은 '온 족속을 제자 삼아 예수 그리스도의 복음을 전하는 전도와 선교'의 사명을 감당하기 위함이었습니다. 조셉 데이비스 기념 선교회는 특히 호주 현지에 나와 있는 교민으로서, 그리고 전 세계에 흩어져 살아가고 있는 한인 디아스포라 커뮤니티 내의 성도들로서 — '나가 있는 선교사'에 의한 현지 전도·선교를 본 선교회의 사역의 주된 방향으로 삼고자 하는 비전을 가지고 선교 사역을 호주 땅 내에서 펼치기로 하였습니다.</p>
+          <p>이에 따라, 조셉 데이비스 기념 선교법인은 디아스포라 거주 현지의 복음화 사역을 중심으로 문서 선교 및 디지털 미디어 선교를 중점 사역으로 구상하였으며 이에 부대하여 아래와 같은 몇 가지 전문사역들을 함께 수행해 나가고자 애쓴 바 있습니다.</p>
+          <p><strong>1) 문서 선교 및 디지털 선교 사역</strong></p>
+          <ul><li>성경 번역 및 출판</li><li>기독교 도서 번역 출판</li><li>디지털 전도 매체 보급 운동 'Good Friends Outreach'</li><li>기타 다중 외국어 문서 선교 툴 제작 보급 (Youtube 자막 제작 보급 등)</li></ul>
+          <p><strong>2) 리서치 전문 사역</strong></p>
+          <ul><li>선교 지역 정보 백서 발간 사업</li><li>선교 지역 영상 정보 제작 보급</li></ul>
+          <p><strong>3) 비즈니스 선교 사역</strong></p>
+          <ul><li>문서 선교 사역에 관련한 다중언어 출판사 운영</li><li>여타 비즈니스 선교 모델 개발 및 비즈니스 선교 창업 지원</li></ul>
+          <p><strong>4) 국내외 선교사 지원 사역</strong></p>
+          <ul><li>선교사와 개인/단체 후원자와의 온라인 접속 네트웍 공간 Kominet 운영</li><li>선교사 및 은퇴 목회자 안식 처소 네트웍 (온/오프라인) 운영</li></ul>
+        </div>
+        <div class="en">
+          <h3>Founded as Joseph Davies Memorial Mission</h3>
+          <p>HiM began in 2019 as Joseph Davies Memorial Association Inc., named for Rev. Joseph Henry Davies (1856–1890), the first Australian missionary to Korea, who died of smallpox and pneumonia on April 5, 1890 — just six months after arriving, and one day after finally reaching Busan on foot. Moved by his death, the Presbyterian Church of Victoria and later Australian Presbyterian churches sent 126 missionaries to Korea, especially the Gyeongnam region — a single grain that bore tenfold, twentyfold, and a hundredfold harvest.</p>
+          <p>In February 2019, to carry forward his devotion and obey Christ's command to make disciples of all nations, Korean-Australian Christians established the Joseph H. Davies Memorial Mission Association in Brisbane — to evangelise the very land where they now live as immigrants, and to whom they owe a debt of gospel gratitude.</p>
+          <p>The founding vision centred on document and digital mission carried out by "missionaries already living locally" within the diaspora, alongside research mission (mission-field white papers and video resources), business mission (multilingual publishing and mission-business incubation), and support networks for missionaries at home and abroad — including the Kominet online network and a rest-home network for missionaries and retired pastors.</p>
+        </div>
       </div>
-      <div class="tl-item">
-        <span class="tl-dot"></span>
-        <p class="tl-year">1890</p>
-        <p class="tl-text"><span class="ko">부산으로 도보 여행 중 수두와 폐렴에 걸려 4월 5일 소천. 조선 땅을 밟은 지 단 6개월 만의 일이었습니다.</span><span class="en">While travelling on foot to Busan, he contracts smallpox and pneumonia and dies on April 5 — just six months after arriving in Korea.</span></p>
+      <div class="era-card">
+        <span class="era-year">Since 2024</span>
+        <div class="ko">
+          <h3>JD Media Mission으로 명칭 변경</h3>
+          <p>현대 사회가 직면한 선교 사역의 다양성이라는 주제 안에서 고민하던 조셉 데이비스 기념 선교회는 2024년 "시드니 교민을 위한 창조 신앙 부흥회" 개최를 기점으로 창조 신앙 변증 전문 단체로 거듭나기로 결정하게 되었습니다. 이에 따라 선교회의 명칭을 Joseph Davies의 첫 글자를 딴 JD Media 선교회로 변경함과 동시에 미디어 선교 전문단체를 지향하는 '선택과 집중'의 전략 방향을 채택하기로 하였습니다.</p>
+          <h4>JD Media 선교회의 핵심 사역 방향</h4>
+          <ul>
+            <li>문서 선교, 디지털 선교, 리서치 선교를 위한 선교 단체</li>
+            <li>'나가 있는 선교사'에 의한 현지 복음 전도를 우선으로 하는 선교 단체</li>
+            <li>선교사의, 선교사에 의한, 선교사를 위한 협동 조합형 선교 단체</li>
+            <li>비즈니스 선교를 통해 자립, 자생, 자영하는 공동체 선교 단체</li>
+            <li>평신도 전문인 선교를 핵심 사역으로 하는 선교 단체</li>
+          </ul>
+          <p>위 각 사항에 부응하는 선교 단체로 자리 매김할 수 있도록 나름 애를 써 왔습니다.</p>
+          <p>이에 따라, JD Media 선교회는 지난 기간 동안 YouTube 영상 제작 등을 통한 미디어 선교, 해외 창조과학 선교 네트웍 개발, 창조 신앙 전파를 위한 각종 창조 과학 캠프, 창조 과학 세미나 개최, 성경적 대홍수 증거 필드 탐사 등 창조 신앙 전파 사역에 나름 힘써 오다가 2026년 7월, 선교사 영입 확대를 기점으로 선교회 명칭을 HisCreation iDefend Mission으로 개칭하기에 이르렀습니다.</p>
+        </div>
+        <div class="en">
+          <h3>Renamed JD Media Mission</h3>
+          <p>In 2024, following a creation-faith revival gathering for the Sydney Korean community, the mission chose to specialise in defending the creation faith and was renamed JD Media Mission — a "focus and concentrate" strategy centred on document, digital, and research mission; local evangelism led by missionaries already on the ground; a cooperative, missionary-run structure; self-sustaining business mission; and lay-professional mission.</p>
+          <p>Through YouTube production, overseas Creation Science networks, creation camps, seminars, and biblical flood-evidence field expeditions, the mission grew until, in July 2026, expanding missionary recruitment led to a further renaming: HisCreation iDefend Mission.</p>
+        </div>
       </div>
-      <div class="tl-item">
-        <span class="tl-dot"></span>
-        <p class="tl-year">1889–1945</p>
-        <p class="tl-text"><span class="ko">그의 죽음에 감동한 호주 빅토리아 주 장로교회가 126명의 선교사를 한국 땅에 파송. 한 알의 밀알이 백배의 결실을 맺습니다.</span><span class="en">Moved by his death, the Presbyterian Church of Victoria sends 126 missionaries to Korea — a single grain bearing a hundredfold harvest.</span></p>
-      </div>
-      <div class="tl-item">
-        <span class="tl-dot"></span>
-        <p class="tl-year">Today</p>
-        <p class="tl-text"><span class="ko">호주 한인 디아스포라 그리스도인들이 HiM 선교회를 설립하여, 문서·디지털·리서치 선교로 그의 정신을 계승합니다.</span><span class="en">Korean-Australian Christians establish HisCreation iDefend Mission (HiM) to carry his legacy forward through document, digital, and research mission.</span></p>
+      <div class="era-card">
+        <span class="era-year">From 2026</span>
+        <div class="ko">
+          <h3>HisCreation iDefend Mission 시대를 열며</h3>
+          <p>HiM 선교회는 아래와 같은 단체의 가치를 추구해 나가고자 모인 선교사들의 모임입니다.</p>
+          <p><strong>1. HiM 선교회는 문서 선교, 디지털 선교를 위한 선교 단체입니다.</strong><br>문서 선교, 디지털 선교, 리서치 선교를 감당하기 위해 NIV, KJV, ESV 등의 영어 성경 번역 출판과 기타 기독교 관련 서적의 다중 언어 번역 출판을 위한 '산물 – Living Waters' 출판사를 한국 내에서 운영하고 있으며, 인니어, 캄보디아어, 베트남어, 라오스어, 일본어, 중국어 등 동남아 각국의 다양한 언어 번역에 의한 복음전도 동영상 그리고 USB 등 각종 디지털 전도매체 제작·보급·발간 사역을 추진해 나가는 '멀티 링구얼 선교연구원'을 운영하고 있습니다.</p>
+          <p><strong>2. HiM 선교회는 디아스포라로 이미 현지에 '나가 있는 선교사'에 의한 현지 선교를 우선으로 하는 선교 단체입니다.</strong><br>한인 디아스포라 교회 성도의 선교 마인드 고취를 통하여 '현지에 가 있는 선교사'에 의한 도시 복음 선교, 곧 '문지방 선교'를 우선으로 해 나가고자 하는 선교회입니다.</p>
+          <p><strong>3. HiM 선교회는 평신도 전문인 선교를 핵심 사역으로 하는 선교회입니다.</strong><br>전문 지식과 전문 기술, 그리고 해외 생활의 오랜 경험을 고루 갖춘 해외 교민 평신도의 선교 마인드를 고취하여 이들을 '이미 나가 있는 선교사'로 동원하는 한인 디아스포라 네트웍 개발 사업을 전개해 나가는 선교회입니다.</p>
+        </div>
+        <div class="en">
+          <h3>Entering the HisCreation iDefend Mission Era</h3>
+          <p>HiM is a community of missionaries gathered around three shared values.</p>
+          <p><strong>1. A document and digital mission.</strong> We run the "Living Waters" publishing house in Korea, producing NIV, KJV, and ESV Bible translations and multilingual Christian literature, alongside a Multilingual Mission Research Institute producing gospel videos and digital media in Indonesian, Cambodian, Vietnamese, Lao, Japanese, and Chinese.</p>
+          <p><strong>2. A mission that prioritises local evangelism by "missionaries already on the ground."</strong> We equip Korean diaspora believers already living abroad to lead urban, "threshold" evangelism where they live.</p>
+          <p><strong>3. A mission built on lay professionals.</strong> We mobilise overseas Korean lay believers — with their professional expertise and years of experience abroad — as missionaries already positioned in the field, through an ongoing diaspora network initiative.</p>
+        </div>
       </div>
     </div>
   </div>
@@ -436,9 +534,125 @@ footer{background:#0D1A27;padding:48px 40px}
 <!-- RECENT ACTIVITIES — Google Calendar -->
 <section id="activities">
   <div class="w">
-    <p class="ey rv"><span class="ko">최근 활동</span><span class="en">Recent Activities</span></p>
-    <h2 class="st rv" style="margin-bottom:8px"><span class="ko">우리가 <em>해온 일들</em></span><span class="en">What We've <em>Been Doing</em></span></h2>
-    <p class="sl rv d1" style="margin-bottom:32px"><span class="ko">창조과학 교실, 세미나, 캠프 등 선교회의 모든 활동 일정을 한눈에 확인하세요.</span><span class="en">See all our Creation Science classrooms, seminars, and camps at a glance.</span></p>
+    <p class="ey rv"><span class="ko">하는 일</span><span class="en">What We Do</span></p>
+    <h2 class="st rv" style="margin-bottom:8px"><span class="ko">우리가 <em>하는 일</em></span><span class="en">What We <em>Do</em></span></h2>
+    <p class="sl rv d1" style="margin-bottom:40px"><span class="ko">HiM은 미디어·교육·차세대·선교의 네 방향으로 창조 신앙을 전합니다.</span><span class="en">HiM carries the creation faith forward through media, education, next-generation, and outreach ministry.</span></p>
+
+    <div class="do-cards rv d1">
+      <div class="do-card">
+        <span class="dc-num">01</span>
+        <h3><span class="ko">미디어 사역</span><span class="en">Media Ministry</span></h3>
+        <p><span class="ko">유튜브 등 미디어 환경에서 창조 사실을 알리고 진화론의 허구성을 알리는 일</span><span class="en">Making the truth of creation known — and exposing the fiction of evolution — across YouTube and other media.</span></p>
+        <ul>
+          <li><span class="ko">유튜브 운영: 창조 신앙 변증 영상 제작 및 채널 운영</span><span class="en">YouTube: creation-faith apologetics videos and channel operation</span></li>
+          <li><span class="ko">문서 출판 보급: 베트남어 등 다양한 언어의 신앙 출판물 제작 보급</span><span class="en">Publishing: Christian literature in multiple languages</span></li>
+          <li><span class="ko">온라인 잡지 발간: 크리스천 뉴스 앤 리뷰, 과학과 신앙 등</span><span class="en">Online magazines: Christian News & Review, Science &amp; Faith</span></li>
+        </ul>
+      </div>
+      <div class="do-card">
+        <span class="dc-num">02</span>
+        <h3><span class="ko">교육 사역</span><span class="en">Education Ministry</span></h3>
+        <p><span class="ko">진화론적 세계관이 주된 패러다임으로 등장하고 있는 현실 속에서 교육을 통해 창조신앙을 회복하고 부흥하는 일</span><span class="en">Restoring and reviving the creation faith through education, in a world shaped by an evolutionary worldview.</span></p>
+        <ul>
+          <li><span class="ko">창조과학 캠프 운영</span><span class="en">Creation Science camps</span></li>
+          <li><span class="ko">창조과학 세미나 개최</span><span class="en">Creation Science seminars</span></li>
+          <li><span class="ko">창조과학 교실 개최 및 강연</span><span class="en">Creation Science classrooms &amp; lectures</span></li>
+          <li><span class="ko">창조과학 교사 양성</span><span class="en">Training Creation Science teachers</span></li>
+        </ul>
+      </div>
+      <div class="do-card">
+        <span class="dc-num">03</span>
+        <h3><span class="ko">차세대 사역</span><span class="en">Next-Gen Ministry</span></h3>
+        <p><span class="ko">유·초등, 중·고등, 대학청년 등 다음 세대를 창조신앙으로 바르게 세워 나가는 일에 교회와 학교, 선교단체와 협력하는 일</span><span class="en">Partnering with churches, schools, and mission bodies to ground the next generation in the creation faith.</span></p>
+        <ul>
+          <li><span class="ko">어린이 및 청소년 창조과학 비전 캠프</span><span class="en">Creation Science vision camps for children &amp; youth</span></li>
+          <li><span class="ko">성경학교·수련회 프로그램 지원</span><span class="en">Support for Bible school &amp; retreat programs</span></li>
+          <li><span class="ko">차세대 창조 교육 출판물 제작</span><span class="en">Creation-education materials for the next generation</span></li>
+        </ul>
+      </div>
+      <div class="do-card">
+        <span class="dc-num">04</span>
+        <h3><span class="ko">선교 사역</span><span class="en">Outreach Ministry</span></h3>
+        <p><span class="ko">아시아, 태평양 지역 선교 대상 지역에 창조과학 전문인 선교사 파송을 추진하고 네트웍을 만들어 나가는 일</span><span class="en">Sending creation-science professional missionaries across Asia-Pacific and building the network to support them.</span></p>
+        <ul>
+          <li><span class="ko">대홍수 증거 탐사 사역</span><span class="en">Flood-evidence field expeditions</span></li>
+          <li><span class="ko">창조 과학 선교사 해외 네트웍 관리</span><span class="en">Overseas Creation Science missionary network</span></li>
+          <li><span class="ko">창조과학 세미나 해외 개최</span><span class="en">Creation Science seminars held overseas</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="do-table-wrap rv d2">
+      <table class="do-table">
+        <thead><tr>
+          <th><span class="ko">구분</span><span class="en">Area</span></th>
+          <th><span class="ko">중점 내용</span><span class="en">Focus</span></th>
+          <th><span class="ko">세부 내용</span><span class="en">Details</span></th>
+        </tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="ko">교육사역</span><span class="en">Education</span></td>
+            <td><span class="ko">진화론적 세계관이 주된 패러다임으로 등장하고 있는 현실 속에서 창조신앙을 회복하고 부흥하는 일.</span><span class="en">Restoring and reviving the creation faith in a world shaped by evolutionary thought.</span></td>
+            <td>
+              <ul class="ko">
+                <li><strong>창조과학 세미나</strong> — 교회 및 기관의 요청에 따라 예배, 교회학교, 캠프, 수련회, 특강 등에서 다양한 주제로 창조과학 세미나를 위한 전문 강사 파송 (호주 CMI 및 한국창조과학회와 협조)</li>
+                <li><strong>창조과학교실</strong> — 창조과학과 창조신앙을 배우는 기본과정, 심화과정을 온·오프라인 과정으로 운영함으로써, 내가 먼저 배우고 주위에 전하는 '창전사' 제자 양성 과정을 개설, 운영하고자 함.</li>
+              </ul>
+              <ul class="en">
+                <li><strong>Creation Science Seminars</strong> — expert speakers sent to churches and organisations for worship services, Sunday school, camps, retreats and special lectures (in partnership with CMI Australia and the Korea Association for Creation Research)</li>
+                <li><strong>Creation Science Classrooms</strong> — foundational and advanced online/offline courses that train "Creation Evangelist" disciples who learn first, then teach others</li>
+              </ul>
+            </td>
+          </tr>
+          <tr>
+            <td><span class="ko">차세대사역</span><span class="en">Next Generation</span></td>
+            <td><span class="ko">유·초등, 중·고등, 대학청년 등 다음 세대를 창조신앙으로 바르게 세워 나가는 일에 교회와 학교, 선교단체와 협력하는 일.</span><span class="en">Working with churches, schools and mission bodies to ground the next generation in the creation faith.</span></td>
+            <td>
+              <ul class="ko">
+                <li><strong>어린이·청소년 창조과학 비전 캠프</strong> — 방학 중, 어린이 및 청소년 대상 창조과학 비전 캠프 진행을 통해 창조신앙에 대한 체계적인 교육과 비전 찾기 (교회와의 연합 행사로 기획)</li>
+                <li><strong>성경학교·수련회 프로그램 지원</strong> — 창조과학 세미나, 실험, 활동 등 창조 신앙 교육 프로그램을 각 교회의 성경학교 및 수련회에 적용하는 강사 파송, 프로그램 운영 지원 (본부 협조 사항)</li>
+              </ul>
+              <ul class="en">
+                <li><strong>Children &amp; Youth Vision Camps</strong> — school-holiday Creation Science vision camps for systematic teaching and vision-casting (planned as joint events with churches)</li>
+                <li><strong>Bible School &amp; Retreat Support</strong> — sending instructors and supporting programs that bring creation-science seminars, experiments and activities into church Bible schools and retreats</li>
+              </ul>
+            </td>
+          </tr>
+          <tr>
+            <td><span class="ko">선교 사역</span><span class="en">Outreach</span></td>
+            <td><span class="ko">아시아, 태평양 지역 선교 대상 지역에 창조과학 전문인 선교사 파송을 추진.</span><span class="en">Sending creation-science professional missionaries across Asia-Pacific mission fields.</span></td>
+            <td>
+              <ul class="ko">
+                <li><strong>창조과학 전문인 선교사 파송</strong> — 선교 대상 지역에 창조과학 전문인 선교사를 육성, 파송하고 후원하는 일 (멜번, 퍼스 등 1차 후보 지역 선정)</li>
+                <li><strong>단기선교 프로그램</strong> — 과학을 통한 복음 전파 전략의 일환으로 선교 대상 지역에 단기선교 프로그램을 운영하고 지원하는 일</li>
+              </ul>
+              <ul class="en">
+                <li><strong>Professional Missionary Sending</strong> — training, sending and supporting creation-science professional missionaries (initial candidate locations: Melbourne, Perth)</li>
+                <li><strong>Short-Term Mission Programs</strong> — running and supporting short-term mission trips as part of a science-based gospel strategy</li>
+              </ul>
+            </td>
+          </tr>
+          <tr>
+            <td><span class="ko">IT/미디어 사역</span><span class="en">IT / Media</span></td>
+            <td><span class="ko">유튜브 등 미디어 환경에서 창조 사실을 알리고 진화론의 허구성을 알리는 일.</span><span class="en">Making the truth of creation known across YouTube and other media.</span></td>
+            <td>
+              <ul class="ko">
+                <li><strong>&lt;창조&gt;지 번역 발간</strong> — 한국창조과학회의 월간지 '창조'지를 아시아 태평양 지역 언어로 번역 출판하는 일 (1차 대상 언어인 영어는 멜번 지부 협조 의뢰 예정)</li>
+                <li><strong>미디어 사역</strong> — 성경에 기록된 창조가 역사적 사실임을 알리는 유튜브 영상 제작 보급 등 미디어 사역 전개</li>
+                <li><strong>문서 사역</strong> — 창조과학 신간 도서와 DVD(번역 자막 생성) 등을 출판, 보급하는 일</li>
+              </ul>
+              <ul class="en">
+                <li><strong>&lt;Creation&gt; Magazine Translation</strong> — translating and publishing the Korea Association for Creation Research's monthly "Creation" magazine into Asia-Pacific languages</li>
+                <li><strong>Media Ministry</strong> — producing and distributing YouTube videos that present biblical creation as historical fact</li>
+                <li><strong>Document Ministry</strong> — publishing and distributing new Creation Science books and subtitled DVDs</li>
+              </ul>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="ey rv" style="margin-bottom:8px"><span class="ko">다가오는 일정</span><span class="en">Upcoming Schedule</span></p>
     <div class="activities-calendar rv d2">
       <div class="cal-header">
         <button type="button" class="cal-nav" onclick="calChangeMonth(-1)">◀ <span class="ko">이전 달</span><span class="en">Prev</span></button>
@@ -455,37 +669,47 @@ footer{background:#0D1A27;padding:48px 40px}
 
 <!-- SPIRIT -->
 <section id="spirit">
-  <div class="sg">
-    <div class="sc rv">
-      <span class="scn">01</span><div class="sln"></div>
-      <h3><span class="ko">믿음 위에 헌신</span><span class="en">Devotion in Faith</span></h3>
-      <p><span class="ko">"거저 받았으니 거저 주라" — 예수 그리스도의 믿음 위에 서서 아무 공로 없이 받은 구원에 감격하여 헌신합니다.</span><span class="en">Standing on faith in Christ, we give freely as we have freely received — our devotion a response to unmerited grace.</span></p>
-    </div>
-    <div class="sc rv d1">
-      <span class="scn">02</span><div class="sln"></div>
-      <h3><span class="ko">소망의 전파</span><span class="en">Spreading Hope</span></h3>
-      <p><span class="ko">오직 하늘나라에 소망을 두고 사는 그리스도인으로서, 믿지 않는 이웃에게 같은 소망을 전파하는 데 몸과 마음을 바칩니다.</span><span class="en">As Christians whose hope rests in heaven, we devote ourselves to sharing that same hope with those who do not yet know it.</span></p>
-    </div>
-    <div class="sc rv d2">
-      <span class="scn">03</span><div class="sln"></div>
-      <h3><span class="ko">기쁨으로 섬김</span><span class="en">Joyful Service</span></h3>
-      <p><span class="ko">사람의 칭찬이 아닌 내면의 기쁨으로 이 길을 걷는 사람들로서, 섬기러 오신 예수님을 닮아 이웃을 섬깁니다.</span><span class="en">We walk this path from inner joy — emulating Christ who came not to be served, but to serve.</span></p>
-    </div>
-  </div>
-</section>
-
-<!-- NAME MEANING BADGE -->
-<section id="name-meaning">
   <div class="w">
-    <div class="nm-wrap rv">
-      <div class="nm-badge">
-        <span class="nm-letters">JD</span>
-        <span class="nm-sub">Memorial Association</span>
-      </div>
-      <div class="nm-text">
-        <p><span class="ko"><strong>JOSEPH DAVIES (JD) MEMORIAL ASSOCIATION INC.</strong>는 조셉 헨리 데이비스 선교사(1856–1890)를 기념하고, 예수 그리스도의 가르침을 온 족속에게 전하는 사명을 위해 세워진 법인 단체입니다. "JD"는 그의 이니셜이며, "Memorial"은 그의 헌신이 잊히지 않는다는 뜻입니다.</span><span class="en"><strong>Joseph Davies (JD) Memorial Association Inc.</strong> was established to honour Rev. Joseph Henry Davies (1856–1890) and fulfil the Great Commission. "JD" are his initials; "Memorial" affirms that his sacrifice will not be forgotten.</span></p>
-      </div>
-    </div>
+    <p class="ey rv"><span class="ko">신앙고백</span><span class="en">What We Believe</span></p>
+    <h2 class="st rv" style="margin-bottom:40px"><span class="ko">우리가 <em>믿는 것들</em></span><span class="en">What <em>We Believe</em></span></h2>
+    <ol class="belief-list rv d1">
+      <li>
+        <p class="belief-text ko">살아 계신 참 하나님은 오직 한 분이시며 모든 존재의 유일한 원천이시고, 하나님으로서 동일한 본질과 능력과 영원성을 가지신 성부, 성자, 성령의 삼위로 계심을 믿습니다.<span class="belief-ref">렘 10:10; 신 6:4; 고전 8:4,6; 롬 11:36; 마 3:16,17; 28:19; 고후 13:14; 요일 5:7; 살전 1:3,4</span></p>
+        <p class="belief-text en">We believe in the one true, living God — Father, Son, and Holy Spirit — three persons sharing the same essence, power, and eternity.<span class="belief-ref">Jer 10:10; Deut 6:4; 1 Cor 8:4,6; Rom 11:36; Matt 3:16,17; 28:19; 2 Cor 13:14; 1 John 5:7; 1 Thess 1:3,4</span></p>
+      </li>
+      <li>
+        <p class="belief-text ko">성경은 성령의 감동으로 쓰여진 것이며, 순종해야 할 하나님의 말씀의 권위를 가지며, 또한 오류가 없는 진리임을 믿습니다.<span class="belief-ref">딤후 3:16-17; 벧후 1:21</span></p>
+        <p class="belief-text en">We believe Scripture is God-breathed, carries the authority of God's Word, and is without error.<span class="belief-ref">2 Tim 3:16-17; 2 Pet 1:21</span></p>
+      </li>
+      <li>
+        <p class="belief-text ko">성경에는 하나님의 영광, 세상의 창조, 사람의 타락과 구원에 관한 하나님의 뜻이 기록되어 있으며, 사람이 믿어야 할 신앙과 행하여야 할 삶의 규범을 계시하고 있음을 믿습니다.<span class="belief-ref">딤후 3:16-17; 갈 1:8-9; 계 22:18</span></p>
+        <p class="belief-text en">We believe Scripture reveals God's glory, the creation of the world, humanity's fall and salvation, and the faith and life God calls us to.<span class="belief-ref">2 Tim 3:16-17; Gal 1:8-9; Rev 22:18</span></p>
+      </li>
+      <li>
+        <p class="belief-text ko">하나님께서는 자신의 영원한 권능과 지혜의 영광을 나타내시기 위하여 천지만물을 무에서 창조하셨음을 믿습니다.<span class="belief-ref">창 1:1-31; 롬 1:20; 히 11:3</span></p>
+        <p class="belief-text en">We believe God created the heavens and the earth out of nothing, to display His eternal power and wisdom.<span class="belief-ref">Gen 1:1-31; Rom 1:20; Heb 11:3</span></p>
+      </li>
+      <li>
+        <p class="belief-text ko">하나님께서 우주 안에 있는 보이는 것과 보이지 않는 모든 것들을 엿새 동안에 창조하셨으며, 그 모든 것들이 하나님께서 보시기에 심히 좋았음을 믿습니다.<span class="belief-ref">창 1:1-31; 골 1:16; 행 17:24</span></p>
+        <p class="belief-text en">We believe God created everything in the universe, seen and unseen, in six days — and that it was very good.<span class="belief-ref">Gen 1:1-31; Col 1:16; Acts 17:24</span></p>
+      </li>
+      <li>
+        <p class="belief-text ko">하나님께서 모든 생물들을 처음 창조하실 때부터 각기 종류대로 만드셨음을 믿으며, 진화론과 수십억 년의 진화론적 시간 틀을 받아들이지 않습니다.<span class="belief-ref">창 1:21,24-25</span></p>
+        <p class="belief-text en">We believe God created every living thing "after its kind" from the beginning, and we do not accept evolution or its billions-of-years timescale.<span class="belief-ref">Gen 1:21,24-25</span></p>
+      </li>
+      <li>
+        <p class="belief-text ko">하나님께서 사람을 다른 피조물과 다르게 하나님의 형상을 따라 만드셨으며, 이성적이며 불멸하는 영혼을 주시고, 지식과 의와 거룩한 존재로 만드시고, 자유의지를 주셨음을 믿으며, 아담 이전에 이미 죽음이 존재했다고 하는 주장을 받아들이지 않습니다.<span class="belief-ref">창 1:26-27; 2:7; 전 12:7; 마 10:28; 눅 23:43; 엡 4:24; 골 3:10; 롬 5:12; 고전 15:22</span></p>
+        <p class="belief-text en">We believe God made mankind uniquely in His own image, with a rational, immortal soul, knowledge, righteousness, holiness and free will — and we reject the claim that death existed before Adam.<span class="belief-ref">Gen 1:26-27; 2:7; Eccl 12:7; Matt 10:28; Luke 23:43; Eph 4:24; Col 3:10; Rom 5:12; 1 Cor 15:22</span></p>
+      </li>
+      <li>
+        <p class="belief-text ko">성경이 증언하고 있는 엿새 동안의 창조, 에덴동산에서의 아담과 하와의 타락과 죄의 형벌, 단 한 번의 전 지구적 심판인 노아 홍수, 바벨탑의 배도 등과 같은 기록들은 역사적으로 실제 있었던 사실임을 믿습니다.<span class="belief-ref">창 1:1-31; 3:1-24; 6-9장; 11장; 마 24:37-39; 눅 17:26-29</span></p>
+        <p class="belief-text en">We believe the six-day creation, the fall of Adam and Eve in Eden, the single global judgment of Noah's flood, and the rebellion at Babel are real historical events, as Scripture testifies.<span class="belief-ref">Gen 1:1-31; 3:1-24; 6-9; 11; Matt 24:37-39; Luke 17:26-29</span></p>
+      </li>
+      <li>
+        <p class="belief-text ko">하나님과 사람 사이의 유일한 중재자이신 예수 그리스도께서는 성자 하나님이신 참 하나님이시며, 창조주이시고, 성육하신 참 사람이시고, 하나님의 자녀들을 구원하시기 위하여 십자가에 죽으시고 사흘만에 부활하셨으며 하나님 우편에서 그들을 위하여 간구하시며 세상 끝 날에 다시 오셔서 만물을 새롭게 하실 것을 믿습니다.<span class="belief-ref">사 42:1; 요 3:16; 딤전 2:5; 벧전 1:19,20; 요 1:1,14; 갈 4:4; 빌 2:6,8; 요일 5:20; 눅 1:27,31,35; 히 2:14,16,17; 4:15; 행 2:23,24,27; 13:37; 롬 1:4; 8:34; 고전 15:3-5; 막 16:19; 히 7:25; 9:24; 마 13:40-42; 롬 14:9,10; 행 1:11; 10:42; 벧후 2:4; 유 1:6</span></p>
+        <p class="belief-text en">We believe Jesus Christ, the only mediator between God and man, is true God the Son and Creator, truly incarnate as man, who died on the cross and rose on the third day to save God's children, intercedes for us at the Father's right hand, and will return at the end of the age to make all things new.<span class="belief-ref">Isa 42:1; John 3:16; 1 Tim 2:5; 1 Pet 1:19,20; John 1:1,14; Gal 4:4; Phil 2:6,8; 1 John 5:20; Luke 1:27,31,35; Heb 2:14,16,17; 4:15; Acts 2:23,24,27; 13:37; Rom 1:4; 8:34; 1 Cor 15:3-5; Mark 16:19; Heb 7:25; 9:24; Matt 13:40-42; Rom 14:9,10; Acts 1:11; 10:42; 2 Pet 2:4; Jude 1:6</span></p>
+      </li>
+    </ol>
   </div>
 </section>
 
