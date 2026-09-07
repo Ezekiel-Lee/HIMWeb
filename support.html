@@ -708,6 +708,12 @@ function loadCalendarBookings(){
     .catch(function(){ renderCalendarGrid(); });
 }
 
+function escapeHtml(str){
+  var d = document.createElement('div');
+  d.textContent = str == null ? '' : str;
+  return d.innerHTML;
+}
+
 /* ── 다가오는 사역 일정 (공개 스케줄 목록) ── */
 function fmtSchedDate(startStr, endStr){
   var s = new Date(startStr + 'T00:00:00');
