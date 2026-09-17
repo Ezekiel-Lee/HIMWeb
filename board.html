@@ -75,7 +75,7 @@ body.en span.en{display:inline} body.en span.ko{display:none}
 /* ── FULLSCREEN MENU ── */
 #menu{
   position:fixed;inset:0;z-index:1900;
-  background:rgba(8,14,22,.97);
+  background:rgba(8,14,22,.82);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
   opacity:0;pointer-events:none;
   transition:opacity .4s var(--ease);
   display:flex;align-items:center;justify-content:center;
@@ -116,9 +116,9 @@ body.en span.en{display:inline} body.en span.ko{display:none}
 .menu-list li:nth-child(6) a{transition-delay:.24s}
 .menu-list a.current{color:var(--gold)}
 .menu-row{display:flex;align-items:center;justify-content:center;gap:12px}
-.menu-caret{background:none;border:none;cursor:pointer;padding:10px;margin:-10px 0;color:rgba(255,255,255,.3);opacity:0;transform:translateY(100%);transition:transform .5s var(--ease),color .25s,opacity .25s}
+.menu-caret{background:none;border:none;cursor:pointer;padding:10px;margin:-10px 0;color:rgba(255,255,255,.3);opacity:0;transform:translateY(100%);transition:transform .5s var(--ease),color .25s,opacity .25s;font-size:clamp(26px,5vw,46px)}
 #menu.open .menu-caret{opacity:1;transform:translateY(0)}
-.menu-caret svg{display:block;width:15px;height:15px;transition:transform .35s var(--ease)}
+.menu-caret svg{display:block;width:1em;height:1em;transition:transform .35s var(--ease)}
 li.has-sub.open .menu-caret{color:var(--gold)}
 li.has-sub.open .menu-caret svg{transform:rotate(180deg)}
 .submenu{list-style:none;max-height:0;overflow:hidden;opacity:0;transition:max-height .4s var(--ease),opacity .3s var(--ease)}
