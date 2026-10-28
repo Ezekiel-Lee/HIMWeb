@@ -1,0 +1,29 @@
+{
+ "updated": "2026-10-28",
+ "channels": [
+  {
+   "key": "niche",
+   "name": "틈새의 과학",
+   "handle": "@niche_in_science",
+   "id": "UC4w85tYDUaWYBGkgnd4twQg",
+   "url": "https://www.youtube.com/channel/UC4w85tYDUaWYBGkgnd4twQg",
+   "videos": []
+  },
+  {
+   "key": "minister",
+   "name": "쉿! 목사님 과학공부시간",
+   "handle": "@scienceclass4minister",
+   "id": "UCI9LwbjNiIBzEapfPrtWMRQ",
+   "url": "https://www.youtube.com/channel/UCI9LwbjNiIBzEapfPrtWMRQ",
+   "videos": []
+  },
+  {
+   "key": "kimjh",
+   "name": "김진호 박사의 창조론 강의",
+   "handle": "@김진호박사",
+   "id": "UCP9FSuX8H-EhQCm_LfcRq4g",
+   "url": "https://www.youtube.com/channel/UCP9FSuX8H-EhQCm_LfcRq4g",
+   "videos": []
+  }
+ ]
+}

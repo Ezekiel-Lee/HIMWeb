@@ -213,6 +213,23 @@ footer{background:#0D1A27;padding:48px 40px}
 
 /* Channel chips */
 #channels{background:var(--cream)}
+#channels .chtabs{display:flex;flex-wrap:wrap;gap:10px;margin:24px 0 32px}
+.chtab{padding:11px 22px;border:1px solid rgba(196,145,58,.35);border-radius:24px;font-size:13px;color:var(--navy);background:var(--warm);cursor:pointer;font-family:var(--sans);transition:.25s}
+.chtab:hover{border-color:var(--navy)}
+.chtab.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.chvids{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;min-height:120px}
+.chv{display:block;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 12px rgba(15,28,46,.06);transition:.25s}
+.chv:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgba(15,28,46,.14)}
+.chv .th{position:relative;aspect-ratio:16/9;background:var(--navy)}
+.chv .th img{width:100%;height:100%;object-fit:cover}
+.chv .th::after{content:'▶';position:absolute;right:12px;bottom:10px;width:34px;height:34px;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center;padding-left:2px}
+.chv .tx{padding:14px 16px 18px}
+.chv .dt{font-size:11px;color:var(--gold);margin-bottom:5px;letter-spacing:.04em}
+.chv .tt{font-family:var(--serif);font-size:14px;font-weight:700;color:var(--navy);line-height:1.5}
+.chempty{grid-column:1/-1;font-size:13px;color:var(--muted);padding:12px 0}
+.chlink{display:inline-block;margin-top:24px;font-size:13px;font-weight:500;color:var(--navy);border-bottom:1px solid rgba(15,28,46,.3);padding-bottom:2px}
+.chlink:hover{color:var(--gold);border-color:var(--gold)}
+@media(max-width:860px){.chvids{grid-template-columns:1fr}}
 .chips{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px}
 .chip{padding:10px 22px;border:1px solid var(--border, rgba(196,145,58,.3));border-radius:24px;font-size:13px;color:var(--navy);background:var(--warm);transition:.25s}
 .chip:hover{background:var(--navy);color:#fff;border-color:var(--navy)}
@@ -353,16 +370,18 @@ footer{background:#0D1A27;padding:48px 40px}
   </div>
 </section>
 
-<!-- OTHER CHANNELS -->
+<!-- CHANNELS — 채널 선택 → 최신 영상 (data/videos.json, GitHub Actions가 매일 갱신) -->
 <section id="channels">
   <div class="w">
-    <p class="ey rv"><span class="ko">기타 유튜브 채널</span><span class="en">More Channels</span></p>
-    <h2 class="st rv" style="margin-bottom:8px"><span class="ko">대표 선교사의 <em>다른 채널들</em></span><span class="en">Other Channels by <em>the Director</em></span></h2>
-    <p class="sl rv d1" style="margin-bottom:0"><span class="ko">창조론 관련 콘텐츠를 다양한 형식으로 다루는 채널들입니다.</span><span class="en">Additional channels exploring creation theology in different formats.</span></p>
-    <div class="chips rv d2">
-      <span class="chip"><span class="ko">목사님 과학 공부 시간</span><span class="en">Pastor's Science Study Hour</span></span>
-      <span class="chip"><span class="ko">빅뱅과 그리스도인의 우주론</span><span class="en">The Big Bang & Christian Cosmology</span></span>
+    <p class="ey rv"><span class="ko">YouTube 채널</span><span class="en">YouTube Channels</span></p>
+    <h2 class="st rv" style="margin-bottom:8px"><span class="ko">채널을 선택하면 <em>최신 영상</em>이 나와요</span><span class="en">Pick a channel to see <em>latest videos</em></span></h2>
+    <div class="chtabs rv d1" id="chtabs">
+      <button type="button" class="chtab on" data-k="niche" onclick="selectChannel('niche')"><span class="ko">틈새의 과학</span><span class="en">Science in the Gaps</span></button>
+      <button type="button" class="chtab" data-k="minister" onclick="selectChannel('minister')"><span class="ko">쉿! 목사님 과학공부시간</span><span class="en">Pastor's Science Study Hour</span></button>
+      <button type="button" class="chtab" data-k="kimjh" onclick="selectChannel('kimjh')"><span class="ko">김진호 박사의 창조론 강의</span><span class="en">Dr. Jinho Kim's Creation Lectures</span></button>
     </div>
+    <div class="chvids" id="chvids"></div>
+    <a class="chlink" id="chlink" href="#" target="_blank" rel="noopener"><span class="ko">채널 전체 보기</span><span class="en">View the whole channel</span> ↗</a>
   </div>
 </section>
 
@@ -577,6 +596,38 @@ function escapeHtmlMedia(str){
 
 document.addEventListener('DOMContentLoaded', loadCommunityVideos);
 
+
+/* ── 채널별 최신 영상 ── */
+var chData = null, chCurrent = 'niche';
+function chEsc(t){ var d = document.createElement('div'); d.textContent = t == null ? '' : t; return d.innerHTML; }
+function renderChannel(){
+  var box = document.getElementById('chvids'), link = document.getElementById('chlink');
+  if (!box || !chData) return;
+  var ch = (chData.channels || []).filter(function(c){ return c.key === chCurrent; })[0];
+  var FALLBACK = { niche: 'https://www.youtube.com/@niche_in_science', minister: 'https://www.youtube.com/@scienceclass4minister', kimjh: 'https://www.youtube.com/channel/UCP9FSuX8H-EhQCm_LfcRq4g' };
+  link.href = ch ? ch.url : FALLBACK[chCurrent];
+  if (!ch) ch = { videos: [] };
+  if (!ch.videos || !ch.videos.length){
+    box.innerHTML = '<p class="chempty"><span class="ko">영상 목록을 준비 중입니다. 아래 버튼으로 채널에서 바로 보실 수 있어요.</span><span class="en">The video list is being prepared. Use the button below to visit the channel.</span></p>';
+    return;
+  }
+  box.innerHTML = ch.videos.map(function(v){
+    return '<a class="chv" href="https://www.youtube.com/watch?v=' + encodeURIComponent(v.id) + '" target="_blank" rel="noopener">' +
+      '<div class="th"><img src="https://i.ytimg.com/vi/' + encodeURIComponent(v.id) + '/hqdefault.jpg" alt="" loading="lazy"></div>' +
+      '<div class="tx"><p class="dt">' + chEsc(v.published) + '</p><p class="tt">' + chEsc(v.title) + '</p></div></a>';
+  }).join('');
+}
+function selectChannel(k){
+  chCurrent = k;
+  document.querySelectorAll('#chtabs .chtab').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-k') === k); });
+  renderChannel();
+}
+document.addEventListener('DOMContentLoaded', function(){
+  fetch('data/videos.json', { cache: 'no-cache' })
+    .then(function(r){ return r.json(); })
+    .then(function(d){ chData = d; renderChannel(); })
+    .catch(function(){ chData = { channels: [] }; renderChannel(); });
+});
 </script>
 </body>
 </html>

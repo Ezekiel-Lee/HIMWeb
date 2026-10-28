@@ -326,21 +326,49 @@ footer{background:#0D1A27;padding:48px 40px}
 
 <!-- BOARD LIST -->
 <section id="board">
+  <style>
+  .bw{display:grid;grid-template-columns:230px 1fr;gap:48px;align-items:start}
+  .bside{position:sticky;top:96px;border:1px solid rgba(15,28,46,.1);border-radius:10px;background:#fff;padding:20px 8px}
+  .bside-h{font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:6px 14px 8px}
+  .bside-h:not(:first-child){margin-top:14px;padding-top:16px;border-top:1px solid rgba(15,28,46,.08)}
+  .bnav{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;text-align:left;padding:10px 14px;font-size:14px;font-family:var(--sans);color:#4a3e36;background:none;border:none;border-radius:6px;cursor:pointer;transition:.15s}
+  .bnav:hover{background:rgba(15,28,46,.05);color:var(--navy)}
+  .bnav.on{background:var(--navy);color:#fff;font-weight:500}
+  .bnav .bn-c{font-size:11px;opacity:.55}
+  .bmain-h{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:24px;padding-bottom:18px;border-bottom:1px solid rgba(15,28,46,.1)}
+  .bmain-h h2{font-family:var(--serif);font-size:24px;font-weight:700;color:var(--navy)}
+  @media(max-width:860px){
+    .bw{grid-template-columns:1fr;gap:20px}
+    .bside{position:static;display:flex;gap:6px;overflow-x:auto;padding:8px;border-radius:8px}
+    .bside-h{display:none}
+    .bnav{white-space:nowrap;width:auto;flex:0 0 auto}
+  }
+  </style>
   <div class="w">
+    <div class="bw">
+      <nav class="bside" id="bside">
+        <p class="bside-h"><span class="ko">게시판</span><span class="en">Boards</span></p>
+        <button type="button" class="bnav on" data-b="all" onclick="setBoard('all')"><span><span class="ko">전체 글</span><span class="en">All Posts</span></span></button>
+        <button type="button" class="bnav" data-b="notice" onclick="setBoard('notice')"><span><span class="ko">공지사항</span><span class="en">Notices</span></span></button>
+        <p class="bside-h"><span class="ko">창조지</span><span class="en">Creation Magazine</span></p>
+        <button type="button" class="bnav" data-b="ko" onclick="setBoard('ko')"><span><span class="ko">창조지 (한글)</span><span class="en">Korean</span></span></button>
+        <button type="button" class="bnav" data-b="zh" onclick="setBoard('zh')"><span><span class="ko">창조지 (중국)</span><span class="en">Chinese</span></span></button>
+      </nav>
 
-    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:32px">
-      <p class="ey rv" style="margin-bottom:0"><span class="ko">전체 게시글</span><span class="en">All Posts</span></p>
-      <button class="bpri" onclick="openPostModal()" style="padding:11px 24px">
-        <span class="ko">✎ 글쓰기</span><span class="en">✎ Write a Post</span>
-      </button>
+      <div>
+        <div class="bmain-h">
+          <h2 id="bmain-title"><span class="ko">전체 글</span><span class="en">All Posts</span></h2>
+          <button class="bpri" onclick="openPostModal()" style="padding:11px 24px">
+            <span class="ko">✎ 글쓰기</span><span class="en">✎ Write a Post</span>
+          </button>
+        </div>
+        <div id="user-posts-list" class="blist rv">
+          <p id="posts-loading" style="font-size:13px;color:var(--muted);padding:24px 0">
+            <span class="ko">게시글을 불러오는 중...</span><span class="en">Loading posts...</span>
+          </p>
+        </div>
+      </div>
     </div>
-
-    <div id="user-posts-list" class="blist rv">
-      <p id="posts-loading" style="font-size:13px;color:var(--muted);padding:24px 0">
-        <span class="ko">게시글을 불러오는 중...</span><span class="en">Loading posts...</span>
-      </p>
-    </div>
-
   </div>
 </section>
 
@@ -358,6 +386,7 @@ footer{background:#0D1A27;padding:48px 40px}
 .wp-field{width:100%;border:none;border-radius:10px;background:#f4f5f7;padding:15px 18px;font-size:15px;font-family:var(--sans);color:var(--txt);outline:none}
 .wp-field::placeholder{color:#9aa0a8}
 .wp-card .wp-field+.wp-field{margin-top:12px}
+.wp-card select.wp-field{display:block}
 .wp-editor{border:1px solid rgba(15,28,46,.1);border-radius:4px;overflow:hidden}
 .wp-toolbar{display:flex;flex-wrap:wrap;gap:4px;padding:10px 14px;background:#fafafa;border-bottom:1px solid rgba(15,28,46,.1)}
 .wp-tool{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:64px;padding:8px 10px;background:none;border:none;border-radius:6px;font-size:11px;color:#777;cursor:pointer;font-family:var(--sans)}
@@ -402,6 +431,12 @@ footer{background:#0D1A27;padding:48px 40px}
 
     <form id="post-form" onsubmit="submitPost(event)">
       <div class="wp-card">
+        <select id="p-category" class="wp-field" required style="appearance:auto;margin-bottom:12px">
+          <option value="" data-ko="게시판을 선택해 주세요." data-en="Select a board.">게시판을 선택해 주세요.</option>
+          <option value="공지사항" id="opt-notice" data-ko="공지사항" data-en="Notices" style="display:none">공지사항</option>
+          <option value="창조지 (한글)" data-ko="창조지 (한글)" data-en="Creation Magazine (Korean)">창조지 (한글)</option>
+          <option value="창조지 (중국)" data-ko="창조지 (중국)" data-en="Creation Magazine (Chinese)">창조지 (중국)</option>
+        </select>
         <input type="text" id="p-name" class="wp-field" required placeholder="이름을 입력해 주세요">
         <input type="text" id="p-title" class="wp-field" required placeholder="제목을 입력해 주세요">
       </div>
@@ -664,6 +699,8 @@ function updateAdminUI(){
   if (loginForm && admin) loginForm.style.display = 'none';
   if (badge) badge.style.display = admin ? 'block' : 'none';
   if (noticeRow) noticeRow.style.display = admin ? 'block' : 'none';
+  var optN = document.getElementById('opt-notice');
+  if (optN){ optN.style.display = admin ? '' : 'none'; optN.disabled = !admin; }
   if (approvalNote) approvalNote.style.display = admin ? 'none' : 'block';
   if (turnstileRow) turnstileRow.style.display = admin ? 'none' : 'block';
 }
@@ -712,6 +749,8 @@ document.addEventListener('DOMContentLoaded', function(){
 });
 
 function openPostModal(){
+  var sel = document.getElementById('p-category');
+  if (sel && !sel.value && currentBoard !== 'all'){ var c = BOARDS[currentBoard].cat; if (c && (c !== '공지사항' || isAdmin())) sel.value = c; }
   document.getElementById('post-modal-overlay').style.display = 'flex';
   document.body.style.overflow = 'hidden';
   updateAdminUI();
@@ -759,8 +798,8 @@ function submitPost(e){
   var content = document.getElementById('p-content').value;
   var youtubeUrl = document.getElementById('p-youtube').value;
   var driveFolderUrl = document.getElementById('p-drive').value;
-  var category = youtubeUrl ? '영상' : '일반';
-  var isNotice = admin && document.getElementById('p-is-notice').checked;
+  var category = document.getElementById('p-category').value;
+  var isNotice = admin && (document.getElementById('p-is-notice').checked || category === '공지사항');
 
   btn.disabled = true;
   btn.style.opacity = '.6';
@@ -809,6 +848,45 @@ function submitPost(e){
     });
 }
 
+var allPosts = [];
+var currentBoard = 'all';
+var BOARDS = {
+  all:    { cat: '',                 ko: '전체 글',       en: 'All Posts' },
+  notice: { cat: '공지사항',         ko: '공지사항',      en: 'Notices' },
+  ko:     { cat: '창조지 (한글)',    ko: '창조지 (한글)', en: 'Creation Magazine (Korean)' },
+  zh:     { cat: '창조지 (중국)',    ko: '창조지 (중국)', en: 'Creation Magazine (Chinese)' }
+};
+function setBoard(key, noPush){
+  if (!BOARDS[key]) key = 'all';
+  currentBoard = key;
+  document.querySelectorAll('#bside .bnav').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-b') === key); });
+  var t = document.getElementById('bmain-title');
+  if (t) t.innerHTML = '<span class="ko">' + BOARDS[key].ko + '</span><span class="en">' + BOARDS[key].en + '</span>';
+  if (!noPush && window.history && history.pushState){
+    history.pushState({b: key}, '', key === 'all' ? 'board.html' : 'board.html?b=' + key);
+  }
+  renderBoardList();
+}
+window.addEventListener('popstate', function(){
+  var k = new URLSearchParams(location.search).get('b') || 'all';
+  setBoard(k, true);
+});
+function boardMatch(p){
+  if (currentBoard === 'all') return true;
+  if (currentBoard === 'notice') return !!p.is_notice || p.category === '공지사항';
+  return !p.is_notice && p.category === BOARDS[currentBoard].cat;
+}
+function renderBoardList(){
+  var listEl = document.getElementById('user-posts-list');
+  if (!listEl) return;
+  var posts = allPosts.filter(boardMatch);
+  if (!posts.length){
+    listEl.innerHTML = '<p style="font-size:13px;color:var(--muted);padding:24px 0">' + (currentBoard === 'all' ? '아직 게시글이 없습니다. 첫 글을 남겨보세요!' : '이 게시판에 아직 게시글이 없습니다.') + '</p>';
+    return;
+  }
+  listEl.innerHTML = posts.map(renderPostItem).join('');
+}
+
 function loadUserPosts(){
   var listEl = document.getElementById('user-posts-list');
   var loadingEl = document.getElementById('posts-loading');
@@ -836,7 +914,8 @@ function loadUserPosts(){
         return new Date(b.created_at) - new Date(a.created_at);
       });
 
-      listEl.innerHTML = posts.map(renderPostItem).join('');
+      allPosts = posts;
+      renderBoardList();
     })
     .catch(function(){
       listEl.innerHTML = '<p style="font-size:13px;color:var(--muted);padding:24px 0">게시글을 불러오지 못했습니다.</p>';
@@ -879,6 +958,7 @@ function escapeHtml(str){
 }
 
 document.addEventListener('DOMContentLoaded', function(){
+  setBoard(new URLSearchParams(location.search).get('b') || 'all', true);
   loadUserPosts();
   refreshAdminState();
   renderTurnstile();
