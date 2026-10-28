@@ -344,84 +344,118 @@ footer{background:#0D1A27;padding:48px 40px}
   </div>
 </section>
 
-<!-- WRITE POST MODAL -->
-<div id="post-modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(8,14,22,.85);z-index:2000;align-items:center;justify-content:center;padding:24px">
-  <div style="background:var(--cream);border-radius:6px;max-width:560px;width:100%;max-height:88vh;overflow-y:auto;padding:40px">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-      <h3 style="font-family:var(--serif);font-size:22px;font-weight:700;color:var(--navy)"><span class="ko">새 글 작성</span><span class="en">New Post</span></h3>
-      <button onclick="closePostModal()" style="background:none;border:none;font-size:28px;color:var(--muted);line-height:1;cursor:pointer">×</button>
+<!-- WRITE POST MODAL (카페 글쓰기 스타일) -->
+<style>
+#post-modal-overlay{display:none;position:fixed;inset:0;background:#fff;z-index:2000;overflow-y:auto;flex-direction:column}
+.wp-wrap{width:100%;max-width:1040px;margin:0 auto;padding:28px 24px 80px}
+.wp-head{display:flex;align-items:center;justify-content:space-between;padding-bottom:16px;border-bottom:1px solid var(--navy);margin-bottom:28px}
+.wp-head h3{font-family:var(--serif);font-size:26px;font-weight:700;color:var(--navy)}
+.wp-actions{display:flex;align-items:center;gap:10px}
+.wp-close{background:none;border:1px solid rgba(15,28,46,.15);border-radius:6px;padding:9px 16px;font-size:13px;color:var(--navy);cursor:pointer}
+.wp-submit{background:#dff5e8;border:none;border-radius:6px;padding:10px 22px;font-size:13px;font-weight:700;color:#0a9a4a;cursor:pointer}
+.wp-submit:hover{background:#cdeedd}
+.wp-card{border:1px solid rgba(15,28,46,.1);border-radius:18px;padding:22px 26px;margin-bottom:18px}
+.wp-field{width:100%;border:none;border-radius:10px;background:#f4f5f7;padding:15px 18px;font-size:15px;font-family:var(--sans);color:var(--txt);outline:none}
+.wp-field::placeholder{color:#9aa0a8}
+.wp-card .wp-field+.wp-field{margin-top:12px}
+.wp-editor{border:1px solid rgba(15,28,46,.1);border-radius:4px;overflow:hidden}
+.wp-toolbar{display:flex;flex-wrap:wrap;gap:4px;padding:10px 14px;background:#fafafa;border-bottom:1px solid rgba(15,28,46,.1)}
+.wp-tool{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:64px;padding:8px 10px;background:none;border:none;border-radius:6px;font-size:11px;color:#777;cursor:pointer;font-family:var(--sans)}
+.wp-tool:hover,.wp-tool.on{background:rgba(15,28,46,.06);color:var(--navy)}
+.wp-tool svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.wp-attach{display:none;padding:14px 18px;border-bottom:1px solid rgba(15,28,46,.08);background:#fdfdfd}
+.wp-attach.on{display:block}
+.wp-attach label{display:block;font-size:11px;letter-spacing:.06em;color:var(--muted);margin-bottom:8px}
+.wp-attach p.hint{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.6}
+.wp-thumbs{display:flex;flex-wrap:wrap;gap:10px;padding:0 18px}
+.wp-thumbs:not(:empty){padding:14px 18px;border-bottom:1px solid rgba(15,28,46,.08)}
+.wp-thumb{position:relative;width:92px;height:92px;border-radius:6px;overflow:hidden;background:#eee}
+.wp-thumb img{width:100%;height:100%;object-fit:cover}
+.wp-thumb button{position:absolute;top:4px;right:4px;width:20px;height:20px;border-radius:50%;border:none;background:rgba(0,0,0,.6);color:#fff;font-size:13px;line-height:1;cursor:pointer}
+.wp-body{display:block;width:100%;min-height:380px;border:none;padding:24px 28px;font-size:15px;line-height:1.9;font-family:var(--sans);color:var(--txt);resize:vertical;outline:none}
+.wp-body::placeholder{color:#9aa0a8}
+.wp-below{margin-top:20px}
+.wp-adminlink{font-size:11px;color:var(--muted);cursor:pointer;text-decoration:underline;display:inline-block;margin-bottom:18px}
+@media(max-width:640px){.wp-wrap{padding:18px 14px 60px}.wp-head h3{font-size:22px}.wp-card{padding:16px}.wp-body{padding:18px;min-height:300px}.wp-tool{min-width:56px}}
+</style>
+<div id="post-modal-overlay">
+  <div class="wp-wrap">
+    <div class="wp-head">
+      <h3><span class="ko">글쓰기</span><span class="en">Write a Post</span></h3>
+      <div class="wp-actions">
+        <button type="button" class="wp-close" onclick="closePostModal()"><span class="ko">닫기</span><span class="en">Close</span></button>
+        <button type="submit" form="post-form" class="wp-submit" id="post-submit-btn"><span class="ko">등록</span><span class="en">Post</span></button>
+      </div>
     </div>
-    <p id="admin-toggle-link" onclick="toggleAdminLoginForm()" style="font-size:11px;color:var(--muted);cursor:pointer;margin-bottom:28px;text-decoration:underline;display:inline-block">
-      <span class="ko">관리자이신가요?</span><span class="en">Admin login</span>
-    </p>
-    <div id="admin-login-form" style="display:none;margin-bottom:28px;padding:16px;background:rgba(15,28,46,.04);border-radius:4px">
+
+    <p id="admin-toggle-link" class="wp-adminlink" onclick="toggleAdminLoginForm()"><span class="ko">관리자이신가요?</span><span class="en">Admin login</span></p>
+    <div id="admin-login-form" style="display:none;margin-bottom:24px;padding:16px;background:rgba(15,28,46,.04);border-radius:8px;max-width:420px">
       <input type="email" id="admin-email" placeholder="관리자 이메일" autocomplete="username" style="width:100%;margin-bottom:8px;padding:9px 12px;border:1px solid rgba(15,28,46,.15);border-radius:3px;font-size:13px;font-family:var(--sans)">
       <input type="password" id="admin-pw" placeholder="비밀번호" autocomplete="current-password" onkeydown="if(event.key==='Enter')doAdminLogin()" style="width:100%;margin-bottom:10px;padding:9px 12px;border:1px solid rgba(15,28,46,.15);border-radius:3px;font-size:13px;font-family:var(--sans)">
       <button type="button" onclick="doAdminLogin()" style="width:100%;padding:9px;background:var(--navy);color:#fff;border:none;border-radius:3px;font-size:12px;letter-spacing:.06em;cursor:pointer">로그인</button>
       <p id="admin-login-error" style="display:none;font-size:11px;color:#D85A30;margin-top:8px"></p>
     </div>
-    <p id="admin-badge" style="display:none;font-size:11px;color:var(--gold);margin-bottom:28px;letter-spacing:.04em">
+    <p id="admin-badge" style="display:none;font-size:11px;color:var(--gold);margin-bottom:18px;letter-spacing:.04em">
       ✓ <span class="ko">관리자 모드로 글을 작성합니다</span><span class="en">Writing as admin</span>
       <span onclick="adminLogout()" style="cursor:pointer;text-decoration:underline;margin-left:8px;color:var(--muted)"><span class="ko">로그아웃</span><span class="en">Logout</span></span>
     </p>
+
     <form id="post-form" onsubmit="submitPost(event)">
-      <div style="margin-bottom:16px">
-        <label style="display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:6px"><span class="ko">이름</span><span class="en">Name</span></label>
-        <input type="text" id="p-name" required placeholder="홍길동" style="width:100%;padding:11px 14px;border:1px solid rgba(15,28,46,.15);border-radius:3px;font-size:14px;font-family:var(--sans)">
-      </div>
-      <div style="margin-bottom:16px">
-        <label style="display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:6px"><span class="ko">분류</span><span class="en">Category</span></label>
-        <select id="p-category" style="width:100%;padding:11px 14px;border:1px solid rgba(15,28,46,.15);border-radius:3px;font-size:14px;font-family:var(--sans);background:#fff">
-          <option value="일반" data-ko="일반 게시글" data-en="General Post">일반 게시글</option>
-          <option value="영상" data-ko="영상 공유 (YouTube)" data-en="Video Share (YouTube)">영상 공유 (YouTube)</option>
-          <option value="질문" data-ko="질문" data-en="Question">질문</option>
-          <option value="간증" data-ko="간증·나눔" data-en="Testimony">간증·나눔</option>
-        </select>
-      </div>
-      <div style="margin-bottom:16px">
-        <label style="display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:6px"><span class="ko">제목</span><span class="en">Title</span></label>
-        <input type="text" id="p-title" required placeholder="제목을 입력해 주세요" style="width:100%;padding:11px 14px;border:1px solid rgba(15,28,46,.15);border-radius:3px;font-size:14px;font-family:var(--sans)">
-      </div>
-      <div style="margin-bottom:16px">
-        <label style="display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:6px"><span class="ko">내용</span><span class="en">Content</span></label>
-        <textarea id="p-content" required rows="5" placeholder="내용을 입력해 주세요" style="width:100%;padding:11px 14px;border:1px solid rgba(15,28,46,.15);border-radius:3px;font-size:14px;font-family:var(--sans);resize:vertical"></textarea>
-      </div>
-      <div style="margin-bottom:24px">
-        <label style="display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:6px"><span class="ko">YouTube 링크 (선택)</span><span class="en">YouTube Link (optional)</span></label>
-        <input type="url" id="p-youtube" placeholder="https://www.youtube.com/watch?v=..." style="width:100%;padding:11px 14px;border:1px solid rgba(15,28,46,.15);border-radius:3px;font-size:14px;font-family:var(--sans)">
-        <p style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.6"><span class="ko">영상 링크를 입력하면 미디어 페이지에도 자동으로 표시됩니다.</span><span class="en">If you include a video link, it will also appear automatically on the Media page.</span></p>
-      </div>
-      <div style="margin-bottom:24px">
-        <label style="display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:6px"><span class="ko">사진 첨부 (선택, 여러 장 가능)</span><span class="en">Photos (optional, multiple allowed)</span></label>
-        <input type="file" id="p-images" accept="image/*" multiple style="width:100%;padding:9px 0;font-size:13px;font-family:var(--sans)">
-        <p id="p-images-msg" style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.6"></p>
-      </div>
-      <div style="margin-bottom:24px">
-        <label style="display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:6px"><span class="ko">Google Drive 폴더 링크 (선택)</span><span class="en">Google Drive Folder Link (optional)</span></label>
-        <input type="url" id="p-drive" placeholder="https://drive.google.com/drive/folders/..." style="width:100%;padding:11px 14px;border:1px solid rgba(15,28,46,.15);border-radius:3px;font-size:14px;font-family:var(--sans)">
-        <p style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.6"><span class="ko">자료가 많을 때 사용하세요. 폴더가 "링크가 있는 모든 사용자에게 공개"로 설정되어 있어야 게시글에서 보입니다.</span><span class="en">Use this for larger sets of files. The folder must be shared as "Anyone with the link" to appear on the post.</span></p>
+      <div class="wp-card">
+        <input type="text" id="p-name" class="wp-field" required placeholder="이름을 입력해 주세요">
+        <input type="text" id="p-title" class="wp-field" required placeholder="제목을 입력해 주세요">
       </div>
 
-      <div id="turnstile-row" style="margin-bottom:16px">
-        <div id="turnstile-widget"></div>
-        <p id="turnstile-msg" style="display:none;font-size:11px;color:var(--muted)">⚠ CAPTCHA가 아직 설정되지 않았습니다.</p>
+      <div class="wp-editor">
+        <div class="wp-toolbar">
+          <button type="button" class="wp-tool" onclick="wpPickPhotos()">
+            <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2.5"/><circle cx="9" cy="10" r="1.8"/><path d="M21 16l-5-5-8 9"/></svg>
+            <span class="ko">사진</span><span class="en">Photo</span>
+          </button>
+          <button type="button" class="wp-tool on" id="wp-tool-yt" onclick="wpTogglePanel('yt')">
+            <svg viewBox="0 0 24 24"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10.5l5-3v9l-5-3"/></svg>
+            <span class="ko">동영상</span><span class="en">Video</span>
+          </button>
+          <button type="button" class="wp-tool on" id="wp-tool-drive" onclick="wpTogglePanel('drive')">
+            <svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><path d="M12 11v5M9.5 13.5h5"/></svg>
+            <span class="ko">드라이브</span><span class="en">Drive</span>
+          </button>
+        </div>
+        <input type="file" id="p-images" accept="image/*" multiple style="display:none" onchange="wpPhotosChanged(this)">
+        <div class="wp-attach on" id="wp-panel-yt">
+          <label><span class="ko">YouTube 링크</span><span class="en">YouTube Link</span></label>
+          <input type="url" id="p-youtube" class="wp-field" placeholder="https://www.youtube.com/watch?v=...">
+          <p class="hint"><span class="ko">영상 링크를 입력하면 미디어 페이지에도 자동으로 표시됩니다.</span><span class="en">If you include a video link, it will also appear automatically on the Media page.</span></p>
+        </div>
+        <div class="wp-attach on" id="wp-panel-drive">
+          <label><span class="ko">Google Drive 폴더 링크</span><span class="en">Google Drive Folder Link</span></label>
+          <input type="url" id="p-drive" class="wp-field" placeholder="https://drive.google.com/drive/folders/...">
+          <p class="hint"><span class="ko">자료가 많을 때 사용하세요. 폴더가 "링크가 있는 모든 사용자에게 공개"로 설정되어 있어야 게시글에서 보입니다.</span><span class="en">Use this for larger sets of files. The folder must be shared as "Anyone with the link" to appear on the post.</span></p>
+        </div>
+        <div class="wp-thumbs" id="wp-thumbs"></div>
+        <p id="p-images-msg" style="font-size:11px;color:var(--muted);padding:0 18px;line-height:1.6"></p>
+        <textarea id="p-content" class="wp-body" required placeholder="내용을 입력하세요."></textarea>
       </div>
 
-      <div id="admin-notice-row" style="display:none;margin-bottom:24px;padding:16px;background:rgba(196,145,58,.08);border:1px solid rgba(196,145,58,.25);border-radius:4px">
-        <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer">
-          <input type="checkbox" id="p-is-notice" style="width:auto;margin-top:2px">
-          <span style="font-size:13px;color:var(--navy);line-height:1.6">
-            <span class="ko"><strong>공지사항으로 등록</strong> — 게시판 상단에 고정되고 "공지사항" 배지가 표시됩니다.</span>
-            <span class="en"><strong>Mark as Notice</strong> — pinned to the top of the board with a "Notice" badge.</span>
-          </span>
-        </label>
-      </div>
+      <div class="wp-below">
+        <div id="turnstile-row" style="margin-bottom:16px">
+          <div id="turnstile-widget"></div>
+          <p id="turnstile-msg" style="display:none;font-size:11px;color:var(--muted)">⚠ CAPTCHA가 아직 설정되지 않았습니다.</p>
+        </div>
 
-      <p id="approval-note" style="font-size:11px;color:var(--muted);margin-bottom:16px;line-height:1.7"><span class="ko">※ 운영자 승인 후 게시판에 노출됩니다.</span><span class="en">※ Posts appear after admin approval.</span></p>
-      <button type="submit" class="bpri" style="width:100%;justify-content:center" id="post-submit-btn">
-        <span class="ko">게시글 등록</span><span class="en">Submit Post</span>
-      </button>
-      <p id="post-submit-msg" style="display:none;font-size:13px;color:var(--gold);margin-top:14px;text-align:center"></p>
+        <div id="admin-notice-row" style="display:none;margin-bottom:20px;padding:16px;background:rgba(196,145,58,.08);border:1px solid rgba(196,145,58,.25);border-radius:8px;max-width:560px">
+          <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer">
+            <input type="checkbox" id="p-is-notice" style="width:auto;margin-top:2px">
+            <span style="font-size:13px;color:var(--navy);line-height:1.6">
+              <span class="ko"><strong>공지사항으로 등록</strong> — 게시판 상단에 고정되고 "공지사항" 배지가 표시됩니다.</span>
+              <span class="en"><strong>Mark as Notice</strong> — pinned to the top of the board with a "Notice" badge.</span>
+            </span>
+          </label>
+        </div>
+
+        <p id="approval-note" style="font-size:11px;color:var(--muted);line-height:1.7"><span class="ko">※ 운영자 승인 후 게시판에 노출됩니다.</span><span class="en">※ Posts appear after admin approval.</span></p>
+        <p id="post-submit-msg" style="display:none;font-size:13px;color:var(--gold);margin-top:14px"></p>
+      </div>
     </form>
   </div>
 </div>
@@ -634,12 +668,57 @@ function updateAdminUI(){
   if (turnstileRow) turnstileRow.style.display = admin ? 'none' : 'block';
 }
 
+
+/* ── 글쓰기 창 도우미 ── */
+var wpFiles = [];
+function wpPickPhotos(){ document.getElementById('p-images').click(); }
+function wpSyncInput(){
+  var dt = new DataTransfer();
+  wpFiles.forEach(function(f){ dt.items.add(f); });
+  document.getElementById('p-images').files = dt.files;
+}
+function wpPhotosChanged(input){
+  Array.prototype.forEach.call(input.files, function(f){ wpFiles.push(f); });
+  wpSyncInput();
+  wpRenderThumbs();
+}
+function wpRenderThumbs(){
+  var box = document.getElementById('wp-thumbs');
+  box.innerHTML = '';
+  wpFiles.forEach(function(f, i){
+    var d = document.createElement('div'); d.className = 'wp-thumb';
+    var im = document.createElement('img'); im.src = URL.createObjectURL(f); d.appendChild(im);
+    var x = document.createElement('button'); x.type = 'button'; x.textContent = '×';
+    x.onclick = function(){ wpFiles.splice(i, 1); wpSyncInput(); wpRenderThumbs(); };
+    d.appendChild(x); box.appendChild(d);
+  });
+}
+function wpTogglePanel(name){
+  var p = document.getElementById('wp-panel-' + name);
+  var t = document.getElementById('wp-tool-' + name);
+  var on = p.classList.toggle('on');
+  if (t) t.classList.toggle('on', on);
+  if (on){ var inp = p.querySelector('input'); if (inp) inp.focus(); }
+}
+document.addEventListener('DOMContentLoaded', function(){
+  var f = document.getElementById('post-form');
+  if (f) f.addEventListener('reset', function(){
+    wpFiles = []; wpRenderThumbs();
+    ['yt','drive'].forEach(function(n){
+      document.getElementById('wp-panel-' + n).classList.add('on');
+      document.getElementById('wp-tool-' + n).classList.add('on');
+    });
+  });
+});
+
 function openPostModal(){
   document.getElementById('post-modal-overlay').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
   updateAdminUI();
 }
 function closePostModal(){
   document.getElementById('post-modal-overlay').style.display = 'none';
+  document.body.style.overflow = '';
 }
 
 function extractYoutubeId(url){
@@ -676,11 +755,11 @@ function submitPost(e){
   }
 
   var name = document.getElementById('p-name').value;
-  var category = document.getElementById('p-category').value;
   var title = document.getElementById('p-title').value;
   var content = document.getElementById('p-content').value;
   var youtubeUrl = document.getElementById('p-youtube').value;
   var driveFolderUrl = document.getElementById('p-drive').value;
+  var category = youtubeUrl ? '영상' : '일반';
   var isNotice = admin && document.getElementById('p-is-notice').checked;
 
   btn.disabled = true;
