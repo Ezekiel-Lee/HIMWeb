@@ -7,7 +7,23 @@
    "handle": "@niche_in_science",
    "id": "UC4w85tYDUaWYBGkgnd4twQg",
    "url": "https://www.youtube.com/channel/UC4w85tYDUaWYBGkgnd4twQg",
-   "videos": []
+   "videos": [
+    {
+     "id": "A72udF9hmXs",
+     "title": "한국창조과학회와 함께 하는 2026년 호주 대륙 대홍수 증거 탐사",
+     "published": "2026-05-08"
+    },
+    {
+     "id": "rkzdXVR-Xcg",
+     "title": "우연이 아니라, 내부 프로그램이 생명을 바꾼다 ㅣ 다윈의 '상상' vs 멘델의 '과학' ㅣ 우리가 배운 진화론이 틀렸다는 증거",
+     "published": "2026-02-23"
+    },
+    {
+     "id": "bp4vnkgM5As",
+     "title": "지구가 뜨거워져야 빙하기가 온다? 과학자들이 설명 못 한 기후의 역설",
+     "published": "2026-02-16"
+    }
+   ]
   },
   {
    "key": "minister",
@@ -15,7 +31,23 @@
    "handle": "@scienceclass4minister",
    "id": "UCI9LwbjNiIBzEapfPrtWMRQ",
    "url": "https://www.youtube.com/channel/UCI9LwbjNiIBzEapfPrtWMRQ",
-   "videos": []
+   "videos": [
+    {
+     "id": "5aa4M5Xc5dU",
+     "title": "한국창조과학회와 함께 하는 2026년 호주 대륙 대홍수 증거 탐사",
+     "published": "2026-05-15"
+    },
+    {
+     "id": "WI1jEc5b5Ks",
+     "title": "대한민국의 거의 절반, 광대한 넓이의 시드니 사암 지층은 어떻게 생겨났을까? ㅣ  #Sydney #Sandstone  #사암 전지구적 #대홍수 증거 5부",
+     "published": "2025-03-21"
+    },
+    {
+     "id": "3HTBXM1nRqs",
+     "title": "호주의 각 주에서 발견되는 수극/협곡은 어떻게 생겨났는가? | 전지구적 대홍수의 증거 4부",
+     "published": "2025-03-03"
+    }
+   ]
   },
   {
    "key": "kimjh",
@@ -23,7 +55,23 @@
    "handle": "@김진호박사",
    "id": "UCP9FSuX8H-EhQCm_LfcRq4g",
    "url": "https://www.youtube.com/channel/UCP9FSuX8H-EhQCm_LfcRq4g",
-   "videos": []
+   "videos": [
+    {
+     "id": "CJj6mpd_coM",
+     "title": "성경과 과학 (43) 우주의 시간을 훔친 범인은?",
+     "published": "2026-10-23"
+    },
+    {
+     "id": "1vRO9hmKQTs",
+     "title": "외계인의 지구 침공, 가능한가? UFO는?",
+     "published": "2026-08-12"
+    },
+    {
+     "id": "263rjAOJaGQ",
+     "title": "화성에서 살 수 없는 이유 (Elon  Musk: Mars and beyond?)",
+     "published": "2026-07-16"
+    }
+   ]
   }
  ]
 }
