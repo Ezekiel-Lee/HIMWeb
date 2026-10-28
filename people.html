@@ -215,9 +215,14 @@ footer{background:#0D1A27;padding:48px 40px}
 #team{background:var(--warm)}
 .tgrid{display:flex;flex-wrap:wrap;justify-content:center;gap:3px;margin-top:16px}
 .tgrid .tcard{flex:0 1 calc(33.333% - 2px);min-width:260px;padding:44px 32px;display:flex;flex-direction:column;align-items:center}
+.tdesc,.troles{width:100%}
 .tdesc{font-size:12.5px;line-height:1.85;color:var(--muted);font-weight:300;margin-top:14px;text-align:left;transition:.25s}
 .tcard:hover .tdesc{color:rgba(255,255,255,.6)}
 .te:empty,.tr:empty,.tdesc:empty{display:none}
+.troles{font-size:12.5px;line-height:1.85;color:var(--muted);font-weight:300;margin-top:14px;text-align:left;transition:.25s}
+.tcard:hover .troles{color:rgba(255,255,255,.6)}
+.tbio{font-size:10px;line-height:1.7;margin-top:16px;padding-top:14px;border-top:1px solid rgba(15,28,46,.1)}
+.tcard:hover .tbio{border-top-color:rgba(255,255,255,.15)}
 .tcard{padding:36px 22px;background:var(--cream);text-align:center;transition:.25s;position:relative}
 .tcard:hover{background:var(--navy)}
 .tcard:hover .tn{color:#fff}
@@ -225,6 +230,11 @@ footer{background:#0D1A27;padding:48px 40px}
 .tcard:hover .tr{color:var(--gold2);border-color:rgba(255,255,255,.1)}
 .tcard:hover .ti{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.25)}
 .ti{width:64px;height:64px;border-radius:50%;background:var(--navy);display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:24px;font-weight:700;color:var(--gold2);margin:0 auto 18px;transition:.25s;border:1px solid transparent}
+.tphoto{position:relative;width:100%;aspect-ratio:4/5;border-radius:8px;margin:0 0 22px;background:var(--navy) center/cover no-repeat;display:flex;align-items:center;justify-content:center;overflow:hidden;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;transition:.25s}
+.tphoto span{font-family:var(--serif);font-size:56px;font-weight:700;color:var(--gold2)}
+.tphoto.has span{display:none}
+.tphoto::after{content:'';position:absolute;inset:0}
+.tcard:hover .tphoto{box-shadow:0 0 0 1px rgba(255,255,255,.25)}
 .tn{font-size:15px;font-weight:500;color:var(--navy);margin-bottom:4px;transition:.25s}
 .te{font-size:11px;color:var(--muted);margin-bottom:14px;transition:.25s}
 .tr{display:inline-block;font-size:10px;letter-spacing:.06em;color:var(--gold);border-top:1px solid rgba(15,28,46,.1);padding-top:12px;width:100%;transition:.25s}
@@ -368,11 +378,11 @@ a.tr:hover{color:var(--gold2)}
     <h2 class="st rv" style="margin-bottom:12px"><span class="ko">함께 사역하는 <em>다섯 사람</em></span><span class="en">Five People <em>Serving Together</em></span></h2>
     <p class="sl rv d1"><span class="ko">각자의 자리에서 HiM의 사역을 함께 감당하고 있습니다.</span><span class="en">Each serves in their own place, carrying HiM's ministry together.</span></p>
     <div class="tgrid rv d2">
-      <div class="tcard"><div class="ti">서</div><p class="tn">서형</p><p class="te">Mr. Hyoung Seo, Missionary</p><p class="tr"></p><div class="tdesc"><span class="ko">· HiM(HisCreation iDefend Mission) 미니스트리 공동대표<br>· 한국창조과학회 운영이사<br>· 한국창조과학회 호주 지부 사무국장<br>· 유튜브 채널 운영: 틈새의 과학, 목사님 과학공부 시간, 크리스천 뉴스 앤 리뷰 외</span><span class="en">· Chairperson: JD Media Mission<br>· Co-director: HiM (HisCreation iDefend Mission) ministry<br>· Directing Board: Korea Association for Creation Research (KACR)<br>· Secretary &amp; Treasurer: KACR Australia<br>· YouTube producer: Science of the Gap, Science Lecture for Pastors, Christian News &amp; Review</span></div></div>
-      <div class="tcard"><div class="ti">여</div><p class="tn">여아담</p><p class="te">A/Prof. Adam Yeo, Missionary</p><p class="tr"></p><div class="tdesc"><span class="ko">· 호주 의학물리 및 의공학 학회(ACPSEM) 방사선 종양학 의학물리 전문의, 의학물리학 박사(PhD)<br>· 임상: PeterMac 암센터 방사선종양학과 의학물리과 과장<br>· 연구/교육: RMIT 대학 STEM 응용과학부 겸임 교수, 멜번대학교 의과대학 종양학부 선임연구원<br>· 신학/사역: 신학석사, 한국창조과학회 이사 및 호주지부 파송 선교사 (HiM 미니스트리)<br>· 신학연구학 석사(MTS) · 목회학 상위준석사(GDDiv), 호주신학대 Ridley College<br>· 의학물리학 박사(PhD), RMIT 대학교 응용과학부<br>· 응용물리학 석사(MSc), 연세대학원 응용과학부<br>· 물리학 & 인지과학·심리학 복수 학사(Double BSc), 연세대학교</span><span class="en">· Clinical: Lead Medical Physicist, Dept. of Radiation Oncology, Peter MacCallum Cancer Centre<br>· Academic: Associate Professor, School of Applied Sciences, RMIT University; Senior Research Fellow, School of Medicine, the University of Melbourne<br>· Theology: Creation Apologetics Missionary, HisCreation iDefend Mission (HiM); Directing Board, Korean Association for Creation Research (KACR)<br>· ACPSEM-certified radiation oncology medical physicist; PhD in Medical Physics (RMIT)<br>· MTS and GDDiv, Ridley College; MSc in Applied Physics, Yonsei University; Double BSc in Physics and Cognitive Science &amp; Psychology, Yonsei University</span></div></div>
-      <div class="tcard"><div class="ti">김</div><p class="tn">김시연</p><p class="te"></p><p class="tr"></p><p class="tdesc"></p></div>
-      <div class="tcard"><div class="ti">김</div><p class="tn">김진형</p><p class="te"></p><p class="tr"></p><p class="tdesc"></p></div>
-      <div class="tcard"><div class="ti">이</div><p class="tn">이영호</p><p class="te"></p><p class="tr"></p><p class="tdesc"></p></div>
+      <div class="tcard"><div class="tphoto has" style="background-image:url('img/people/seo-hyoung.webp')" oncontextmenu="return false"><span>서</span></div><p class="tn">서형</p><p class="te">Mr. Hyoung Seo, Missionary</p><p class="tr"></p><div class="tdesc"><span class="ko">· HiM(HisCreation iDefend Mission) 미니스트리 공동대표<br>· 한국창조과학회 운영이사<br>· 한국창조과학회 호주 지부 사무국장<br>· 유튜브 채널 운영: 틈새의 과학, 목사님 과학공부 시간, 크리스천 뉴스 앤 리뷰 외</span><span class="en">· Chairperson: JD Media Mission<br>· Co-director: HiM (HisCreation iDefend Mission) ministry<br>· Directing Board: Korea Association for Creation Research (KACR)<br>· Secretary &amp; Treasurer: KACR Australia<br>· YouTube producer: Science of the Gap, Science Lecture for Pastors, Christian News &amp; Review</span></div></div>
+      <div class="tcard"><div class="tphoto has" style="background-image:url('img/people/yeo-adam.webp')" oncontextmenu="return false"><span>여</span></div><p class="tn">여아담</p><p class="te">A/Prof. Adam Yeo, Missionary</p><p class="tr"></p><div class="troles"><span class="ko">· 복음중심 변증 설교<br>· 창조신앙 전파 및 교육선교<br>· 창조과학 캠프 및 세미나 강사<br>· 창조탐사 프로그램 기획 및 가이드</span><span class="en">· Gospel-centered apologetics preaching<br>· Creation faith proclamation &amp; educational mission<br>· Creation Science camp &amp; seminar speaker<br>· Creation expedition program planning &amp; guiding</span></div><div class="tdesc tbio"><span class="ko">· 호주 의학물리 및 의공학 학회(ACPSEM) 방사선 종양학 의학물리 전문의, 의학물리학 박사(PhD)<br>· 임상: PeterMac 암센터 방사선종양학과 의학물리과 과장<br>· 연구/교육: RMIT 대학 STEM 응용과학부 겸임 교수, 멜번대학교 의과대학 종양학부 선임연구원<br>· 신학/사역: 신학석사, 한국창조과학회 이사 및 호주지부 파송 선교사 (HiM 미니스트리)<br>· 신학연구학 석사(MTS) · 목회학 상위준석사(GDDiv), 호주신학대 Ridley College<br>· 의학물리학 박사(PhD), RMIT 대학교 응용과학부<br>· 응용물리학 석사(MSc), 연세대학원 응용과학부<br>· 물리학 & 인지과학·심리학 복수 학사(Double BSc), 연세대학교</span><span class="en">· Clinical: Lead Medical Physicist, Dept. of Radiation Oncology, Peter MacCallum Cancer Centre<br>· Academic: Associate Professor, School of Applied Sciences, RMIT University; Senior Research Fellow, School of Medicine, the University of Melbourne<br>· Theology: Creation Apologetics Missionary, HisCreation iDefend Mission (HiM); Directing Board, Korean Association for Creation Research (KACR)<br>· ACPSEM-certified radiation oncology medical physicist; PhD in Medical Physics (RMIT)<br>· MTS and GDDiv, Ridley College; MSc in Applied Physics, Yonsei University; Double BSc in Physics and Cognitive Science &amp; Psychology, Yonsei University</span></div></div>
+      <div class="tcard"><div class="tphoto has" style="background-image:url('img/people/kim-siyeon.webp')" oncontextmenu="return false"><span>김</span></div><p class="tn">김시연</p><p class="te"></p><p class="tr"></p><p class="tdesc"></p></div>
+      <div class="tcard"><div class="tphoto" oncontextmenu="return false"><span>김</span></div><p class="tn">김진형</p><p class="te"></p><p class="tr"></p><p class="tdesc"></p></div>
+      <div class="tcard"><div class="tphoto" oncontextmenu="return false"><span>이</span></div><p class="tn">이영호</p><p class="te"></p><p class="tr"></p><p class="tdesc"></p></div>
     </div>
     <p class="team-link rv d3"><a href="ministry.html#media-mission"><span class="ko">HiM의 사역 구조 자세히 보기</span><span class="en">Explore HiM's full ministry structure</span> →</a></p>
   </div>
