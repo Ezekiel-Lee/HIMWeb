@@ -349,6 +349,9 @@ footer{background:#0D1A27;padding:48px 40px}
         <p class="bside-h"><span class="ko">게시판</span><span class="en">Boards</span></p>
         <button type="button" class="bnav on" data-b="all" onclick="setBoard('all')"><span><span class="ko">전체 글</span><span class="en">All Posts</span></span></button>
         <button type="button" class="bnav" data-b="notice" onclick="setBoard('notice')"><span><span class="ko">공지사항</span><span class="en">Notices</span></span></button>
+        <p class="bside-h"><span class="ko">사역 소식</span><span class="en">Ministry News</span></p>
+        <button type="button" class="bnav" data-b="camp" onclick="setBoard('camp')"><span><span class="ko">탐사캠프</span><span class="en">Expedition &amp; Camp</span></span></button>
+        <button type="button" class="bnav" data-b="seminar" onclick="setBoard('seminar')"><span><span class="ko">세미나</span><span class="en">Seminar</span></span></button>
         <p class="bside-h"><span class="ko">창조지</span><span class="en">Creation Magazine</span></p>
         <button type="button" class="bnav" data-b="ko" onclick="setBoard('ko')"><span><span class="ko">창조지 (한글)</span><span class="en">Korean</span></span></button>
         <button type="button" class="bnav" data-b="zh" onclick="setBoard('zh')"><span><span class="ko">창조지 (중국)</span><span class="en">Chinese</span></span></button>
@@ -433,6 +436,8 @@ footer{background:#0D1A27;padding:48px 40px}
         <select id="p-category" class="wp-field" required style="appearance:auto;margin-bottom:12px">
           <option value="" data-ko="게시판을 선택해 주세요." data-en="Select a board.">게시판을 선택해 주세요.</option>
           <option value="공지사항" id="opt-notice" data-ko="공지사항" data-en="Notices" style="display:none">공지사항</option>
+          <option value="탐사캠프" data-ko="탐사캠프" data-en="Expedition &amp; Camp">탐사캠프</option>
+          <option value="세미나" data-ko="세미나" data-en="Seminar">세미나</option>
           <option value="창조지 (한글)" data-ko="창조지 (한글)" data-en="Creation Magazine (Korean)">창조지 (한글)</option>
           <option value="창조지 (중국)" data-ko="창조지 (중국)" data-en="Creation Magazine (Chinese)">창조지 (중국)</option>
         </select>
@@ -852,6 +857,8 @@ var currentBoard = 'all';
 var BOARDS = {
   all:    { cat: '',                 ko: '전체 글',       en: 'All Posts' },
   notice: { cat: '공지사항',         ko: '공지사항',      en: 'Notices' },
+  camp:   { cat: '탐사캠프',         ko: '탐사캠프',      en: 'Expedition & Camp' },
+  seminar:{ cat: '세미나',          ko: '세미나',        en: 'Seminar' },
   ko:     { cat: '창조지 (한글)',    ko: '창조지 (한글)', en: 'Creation Magazine (Korean)' },
   zh:     { cat: '창조지 (중국)',    ko: '창조지 (중국)', en: 'Creation Magazine (Chinese)' }
 };
