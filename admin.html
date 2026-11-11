@@ -617,6 +617,9 @@ function renderPendingPosts(posts){
           post.image_urls.map(function(u){ return '<img src="' + u + '" style="width:64px;height:64px;object-fit:cover;border-radius:4px">'; }).join('') +
         '</div>'
       : '';
+    var pdfLinks = (post.file_urls && post.file_urls.length)
+      ? post.file_urls.map(function(u){ return '<p style="margin-top:6px"><a href="' + escapeAttr(u) + '" target="_blank" rel="noopener" style="color:#4A6FA5">📄 PDF 열기</a></p>'; }).join('')
+      : '';
     var driveLink = post.drive_folder_url
       ? '<p style="margin-top:6px"><a href="' + escapeAttr(post.drive_folder_url) + '" target="_blank" rel="noopener" style="color:#4A6FA5">📁 Drive 폴더 열기</a></p>'
       : '';
@@ -628,7 +631,7 @@ function renderPendingPosts(posts){
         '<p>' + escapeHtmlAdmin(post.content) + '</p>' +
         (post.youtube_url ? '<p style="color:var(--gold);margin-top:6px">▶ ' + escapeHtmlAdmin(post.youtube_url) + '</p>' : '') +
         images +
-        driveLink +
+        pdfLinks + driveLink +
       '</div>' +
       '<div class="admin-card-actions">' +
         '<button class="btn-approve" onclick="approvePost(\'' + post.id + '\', this)">승인</button>' +
@@ -663,6 +666,9 @@ function renderPublishedPostCard(post){
       '</div>'
     : '';
   var noticeFlag = post.is_notice ? '<span class="notice-flag">📌 공지</span>' : '';
+  var pdfLinks = (post.file_urls && post.file_urls.length)
+    ? post.file_urls.map(function(u){ return '<p style="margin-top:6px"><a href="' + escapeAttr(u) + '" target="_blank" rel="noopener" style="color:#4A6FA5">📄 PDF 열기</a></p>'; }).join('')
+    : '';
   var driveLink = post.drive_folder_url
     ? '<p style="margin-top:6px"><a href="' + escapeAttr(post.drive_folder_url) + '" target="_blank" rel="noopener" style="color:#4A6FA5">📁 Drive 폴더 열기</a></p>'
     : '';
@@ -674,7 +680,7 @@ function renderPublishedPostCard(post){
       '<p>' + escapeHtmlAdmin(post.content) + '</p>' +
       (post.youtube_url ? '<p style="color:var(--gold);margin-top:6px">▶ ' + escapeHtmlAdmin(post.youtube_url) + '</p>' : '') +
       images +
-      driveLink +
+      pdfLinks + driveLink +
     '</div>' +
     '<div class="admin-card-actions">' +
       '<button class="btn-edit" onclick="editPost(\'' + post.id + '\')">수정</button>' +
