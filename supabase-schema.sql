@@ -28,6 +28,7 @@ create table if not exists posts (
   status           text not null default 'pending' check (status in ('pending','approved','rejected'))
 );
 alter table posts add column if not exists drive_folder_url text;
+alter table posts add column if not exists file_urls text[] not null default '{}';
 
 -- 2) 관리자 목록 테이블 — Supabase Auth로 로그인한 사용자 중
 --    이 테이블에 등록된 user_id만 관리자 권한을 가집니다.
@@ -123,10 +124,12 @@ $$ language plpgsql security definer;
 
 -- 6) 일반 방문자의 글 등록 (캡차 통과 필수, 항상 "대기중"으로 저장됨)
 drop function if exists submit_post(text, text, text, text, text, text[], text);
+drop function if exists submit_post(text, text, text, text, text, text[], text, text);
 create or replace function submit_post(
   p_name text, p_category text, p_title text, p_content text,
   p_youtube_url text, p_image_urls text[], p_turnstile_token text,
-  p_drive_folder_url text default null
+  p_drive_folder_url text default null,
+  p_file_urls text[] default null
 )
 returns posts as $$
 declare
@@ -138,8 +141,8 @@ begin
   if not verify_turnstile(p_turnstile_token) then
     raise exception '자동 등록 방지 확인에 실패했습니다. 새로고침 후 다시 시도해 주세요.';
   end if;
-  insert into posts (name, category, title, content, youtube_url, image_urls, drive_folder_url)
-  values (p_name, p_category, p_title, p_content, p_youtube_url, coalesce(p_image_urls, '{}'), p_drive_folder_url)
+  insert into posts (name, category, title, content, youtube_url, image_urls, drive_folder_url, file_urls)
+  values (p_name, p_category, p_title, p_content, p_youtube_url, coalesce(p_image_urls, '{}'), p_drive_folder_url, coalesce(p_file_urls, '{}'))
   returning * into result;
   return result;
 end;
@@ -165,6 +168,24 @@ drop policy if exists "public can read board images" on storage.objects;
 create policy "public can read board images"
   on storage.objects for select
   using (bucket_id = 'board-images');
+
+-- 7-2) PDF 첨부용 Storage 버킷 (20MB, PDF만 허용)
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('board-files', 'board-files', true, 20971520, array['application/pdf'])
+on conflict (id) do update set
+  public = true,
+  file_size_limit = 20971520,
+  allowed_mime_types = array['application/pdf'];
+
+drop policy if exists "public can upload board files" on storage.objects;
+create policy "public can upload board files"
+  on storage.objects for insert
+  with check (bucket_id = 'board-files');
+
+drop policy if exists "public can read board files" on storage.objects;
+create policy "public can read board files"
+  on storage.objects for select
+  using (bucket_id = 'board-files');
 
 -- ═══════════════════════════════════════════════════════════
 -- 8) 교육 신청(캘린더 예약) — Google Apps Script를 완전히 대체
