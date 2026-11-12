@@ -884,8 +884,8 @@ function submitBooking(e){
     if (res.error) throw res.error;
     msg.className = 'avail-ok';
     msg.textContent = '✓ ' + (document.body.classList.contains('en')
-      ? 'Dates reserved! Pending admin confirmation — we will contact you soon.'
-      : '신청 기간이 예약되었습니다! 운영자 확인 후 확정되며, 곧 연락드리겠습니다.');
+      ? 'Dates reserved! A confirmation email is on its way (please check your spam folder). Pending admin confirmation — we will contact you soon.'
+      : '신청 기간이 예약되었습니다! 입력하신 이메일로 확인 메일이 발송됩니다(스팸함도 확인해 주세요). 운영자 확인 후 확정되며, 곧 연락드리겠습니다.');
     document.getElementById('booking-form').reset();
     if (bkTurnstileWidgetId !== null && typeof turnstile !== 'undefined') turnstile.reset(bkTurnstileWidgetId);
     loadCalendarBookings();
