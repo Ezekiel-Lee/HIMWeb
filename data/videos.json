@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-14",
+ "updated": "2026-11-15",
  "channels": [
   {
    "key": "niche",
@@ -57,6 +57,11 @@
    "url": "https://www.youtube.com/channel/UCP9FSuX8H-EhQCm_LfcRq4g",
    "videos": [
     {
+     "id": "n9pVlYSOxyY",
+     "title": "시간을 훔친 범인을 찾아라",
+     "published": "2026-11-15"
+    },
+    {
      "id": "CJj6mpd_coM",
      "title": "성경과 과학 (43) 우주의 시간을 훔친 범인은?",
      "published": "2026-10-23"
@@ -65,11 +70,6 @@
      "id": "1vRO9hmKQTs",
      "title": "외계인의 지구 침공, 가능한가? UFO는?",
      "published": "2026-08-12"
-    },
-    {
-     "id": "263rjAOJaGQ",
-     "title": "화성에서 살 수 없는 이유 (Elon  Musk: Mars and beyond?)",
-     "published": "2026-07-16"
     }
    ]
   }
